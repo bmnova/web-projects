@@ -7,10 +7,11 @@ import {
   arrayUnion,
   serverTimestamp,
 } from 'firebase/firestore'
-import { db } from './config'
+import { getDb } from './config'
 import type { Workspace, BrandProfile } from '@/types'
 
 export async function createWorkspace(uid: string, name: string): Promise<string> {
+  const db = getDb()
   const ref = doc(collection(db, 'workspaces'))
   await setDoc(ref, {
     id: ref.id,
@@ -26,7 +27,7 @@ export async function createWorkspace(uid: string, name: string): Promise<string
 }
 
 export async function getWorkspace(workspaceId: string): Promise<Workspace | null> {
-  const snap = await getDoc(doc(db, 'workspaces', workspaceId))
+  const snap = await getDoc(doc(getDb(), 'workspaces', workspaceId))
   return snap.exists() ? (snap.data() as Workspace) : null
 }
 
@@ -34,6 +35,7 @@ export async function saveBrandProfile(
   workspaceId: string,
   data: Omit<BrandProfile, 'id' | 'workspaceId' | 'updatedAt'>
 ): Promise<string> {
+  const db = getDb()
   const ref = doc(collection(db, 'workspaces', workspaceId, 'brandProfiles'))
   await setDoc(ref, {
     ...data,
@@ -51,7 +53,7 @@ export async function getBrandProfile(workspaceId: string): Promise<BrandProfile
   const workspace = await getWorkspace(workspaceId)
   if (!workspace?.brandProfileId) return null
   const snap = await getDoc(
-    doc(db, 'workspaces', workspaceId, 'brandProfiles', workspace.brandProfileId)
+    doc(getDb(), 'workspaces', workspaceId, 'brandProfiles', workspace.brandProfileId)
   )
   return snap.exists() ? (snap.data() as BrandProfile) : null
 }
