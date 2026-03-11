@@ -8,7 +8,7 @@ Startupların Reddit, Instagram, TikTok ve YouTube Shorts'ta içerik oluşturup 
 
 | Faz | Başlık | Durum |
 |-----|--------|-------|
-| 1 | Proje Kurulumu | ⬜ Bekliyor |
+| 1 | Proje Kurulumu | ✅ Tamamlandı |
 | 2 | Temel Ürün Yapısı | ⬜ Bekliyor |
 | 3 | Hesap Bağlantısı (OAuth) | ⬜ Bekliyor |
 | 4 | Marka Zekâsı Girişi | ⬜ Bekliyor |
@@ -66,7 +66,7 @@ src/
   store/                 # State yönetimi (Zustand)
 ```
 
-**Tamamlandı mı?** ⬜
+**Tamamlandı mı?** ✅ — `social-saas/` oluşturuldu, tüm paketler kuruldu
 
 ---
 
@@ -139,7 +139,7 @@ vercel --prod
 - Custom domain bağla (opsiyonel)
 - Preview deployments için GitHub bağlantısı kur
 
-**Tamamlandı mı?** ⬜
+**Tamamlandı mı?** ⏳ — Firebase key'leri hazır olduğunda yapılacak
 
 ---
 
@@ -186,7 +186,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 **`.env.example`** dosyası da oluştur (değerleri boş bırak, git'e ekle).
 
-**Tamamlandı mı?** ⬜
+**Tamamlandı mı?** ✅ — `.env.local` ve `.env.example` oluşturuldu, tüm değişkenler tanımlandı
 
 ---
 

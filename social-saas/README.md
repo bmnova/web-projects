@@ -1,36 +1,127 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SocialSaaS
 
-## Getting Started
+Startup'ların Reddit, Instagram, TikTok ve YouTube Shorts'ta içerik oluşturup yayınlamasını sağlayan SaaS platformu.
 
-First, run the development server:
+---
+
+## Teknoloji Yığını
+
+| Katman | Teknoloji |
+|--------|-----------|
+| Frontend | Next.js 16, TypeScript, Tailwind CSS |
+| Auth | Firebase Authentication |
+| Veritabanı | Firestore |
+| Dosya Depolama | Firebase Storage |
+| AI | Claude (`claude-sonnet-4-6`, Anthropic SDK) |
+| Worker | Firebase Cloud Functions |
+| Deploy | Vercel |
+| Test | Jest + Testing Library |
+
+---
+
+## Kurulum
 
 ```bash
+git clone <repo>
+cd social-saas
+npm install
+cp .env.example .env.local
+# .env.local dosyasını doldurun
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Ortam Değişkenleri
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+`.env.example` dosyasını kopyalayın ve doldurun:
 
-## Learn More
+| Değişken | Nereden Alınır |
+|----------|---------------|
+| `NEXT_PUBLIC_FIREBASE_*` | Firebase Console → Proje Ayarları |
+| `TOKEN_ENCRYPTION_KEY` | `openssl rand -hex 32` |
+| `REDDIT_*` | reddit.com/prefs/apps |
+| `GOOGLE_*` | Google Cloud Console |
+| `TIKTOK_*` | TikTok Developer Portal |
+| `META_*` | Meta Developer Portal |
+| `ANTHROPIC_API_KEY` | console.anthropic.com |
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Komutlar
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run dev           # Geliştirme sunucusu (localhost:3000)
+npm run build         # Production build
+npm run test          # Tüm testleri koş
+npm run test:coverage # Kapsam raporu ile test
+npm run lint          # ESLint kontrol
+```
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Test Sonuçları
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Son çalıştırma — **17/17 geçti** ✅
+
+```
+Test Suites: 3 passed, 3 total
+Tests:       17 passed, 17 total
+Snapshots:   0 total
+Time:        1.473 s
+```
+
+| Test Dosyası | Test Sayısı | Kapsam |
+|-------------|------------|--------|
+| `utils.test.ts` | 4 | `cn()` — class birleştirme, Tailwind merge |
+| `schemas.test.ts` | 7 | `BrandProfileSchema` Zod validasyonu |
+| `types.test.ts` | 6 | TypeScript tip tanımları runtime kontrolü |
+
+---
+
+## Proje Yapısı
+
+```
+src/
+  app/                    # Next.js App Router
+  components/
+    ui/                   # Ortak UI bileşenleri
+    layout/               # Header, Sidebar
+  lib/
+    firebase/
+      config.ts           # Auth, Firestore, Storage init
+      workspace.ts        # Workspace & BrandProfile CRUD
+    schemas/
+      brand.ts            # Zod şemaları
+    utils.ts              # cn() utility
+  types/
+    index.ts              # Tüm TypeScript tipleri
+  __tests__/              # Test dosyaları
+firestore.rules           # Firestore güvenlik kuralları
+.env.example              # Ortam değişkeni şablonu
+```
+
+---
+
+## Faz Durumu
+
+| Faz | Başlık | Durum |
+|-----|--------|-------|
+| 1 | Proje Kurulumu | ✅ Tamamlandı |
+| 2 | Temel Ürün Yapısı | ⬜ Bekliyor |
+| 3 | Hesap Bağlantısı (OAuth) | ⬜ Bekliyor |
+| 4 | Marka Zekâsı Girişi | ⬜ Bekliyor |
+| 5 | İçerik Fikri Üretimi | ⬜ Bekliyor |
+| 6 | Platform Özel Dönüşüm | ⬜ Bekliyor |
+| 7 | Reddit Araştırma Akışı | ⬜ Bekliyor |
+| 8 | İçerik Stüdyosu | ⬜ Bekliyor |
+| 9 | Medya Üretim Katmanı | ⬜ Bekliyor |
+| 10 | Onay Sistemi | ⬜ Bekliyor |
+| 11 | Yayın Kuyruğu | ⬜ Bekliyor |
+| 12 | Platform Yayıncıları | ⬜ Bekliyor |
+| 13 | Worker Sistemi | ⬜ Bekliyor |
+| 14 | Dashboard ve Takip | ⬜ Bekliyor |
+| 15 | Güvenlik Kuralları | ⬜ Bekliyor |
+| 16 | MVP Kapsam Kontrolü | ⬜ Bekliyor |
+
+Ayrıntılı uygulama planı: [`../IMPLEMENTATION_PLAN.md`](../IMPLEMENTATION_PLAN.md)
