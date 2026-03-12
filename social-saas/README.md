@@ -131,6 +131,5 @@ Ayrıntılı uygulama planı: [`../IMPLEMENTATION_PLAN.md`](../IMPLEMENTATION_PL
 ## Yapılacaklar
 
 - [ ] Vercel environment variables ekle (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`, `NEXT_PUBLIC_APP_URL` vb.)
-- [ ] Google Cloud Console → Authorized redirect URIs → production URL eklendi ✅
 - [ ] Firebase Console → Authentication → Authorized domains → `web-projects-kappa-hazel.vercel.app` ekle
 - [ ] Google OAuth credentials'larını yenile (client secret sohbette açıkta kaldı)
