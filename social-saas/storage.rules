@@ -1,0 +1,11 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Workspace asset'leri: yalnızca giriş yapmış kullanıcılar kendi workspace'lerine yükleyebilir
+    match /workspaces/{workspaceId}/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+        && request.resource.size < 50 * 1024 * 1024; // max 50MB
+    }
+  }
+}
