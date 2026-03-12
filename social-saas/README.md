@@ -130,5 +130,5 @@ Ayrıntılı uygulama planı: [`../IMPLEMENTATION_PLAN.md`](../IMPLEMENTATION_PL
 
 ## Yapılacaklar
 
-- [ ] Firebase Console → Authentication → Authorized domains → `web-projects-kappa-hazel.vercel.app` ekle
-- [ ] Google OAuth credentials'larını yenile (client secret sohbette açıkta kaldı)
+- [x] Firebase Console → Authentication → Authorized domains → `web-projects-kappa-hazel.vercel.app` ekle
+- [x] Google OAuth credentials'larını yenile (client secret sohbette açıkta kaldı)
