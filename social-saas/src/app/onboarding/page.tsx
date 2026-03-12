@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/firebase/auth-context'
-import { createWorkspace } from '@/lib/firebase/workspace'
+import { createWorkspace, saveBrandProfile } from '@/lib/firebase/workspace'
 import { Zap } from 'lucide-react'
 
 const STEPS = ['Workspace', 'Ürün Bilgisi', 'Ton & Kitle']
@@ -33,7 +33,18 @@ export default function OnboardingPage() {
     setLoading(true)
     setError('')
     try {
-      await createWorkspace(user.uid, workspaceName || productName)
+      const workspaceId = await createWorkspace(user.uid, workspaceName || productName)
+      await saveBrandProfile(workspaceId, {
+        productName,
+        productDescription: productDesc,
+        website,
+        targetAudience,
+        toneOfVoice: tone,
+        ctaStyle,
+        competitors: [],
+        examplePosts: [],
+        forbiddenTerms: [],
+      })
       router.push('/dashboard')
     } catch {
       setError('Bir hata oluştu, tekrar dene.')
