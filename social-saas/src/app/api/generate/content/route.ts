@@ -7,6 +7,8 @@ const PLATFORM_GUIDE: Record<Platform, string> = {
   instagram: 'Instagram caption: engaging storytelling, 5 relevant hashtags at end, 1-2 emojis max.',
   tiktok: 'TikTok script: punchy 3-second hook, fast-paced, end with question or CTA, 3 hashtags.',
   youtube: 'YouTube: write a video title (max 60 chars) + full description with timestamps placeholder and SEO keywords.',
+  twitter: 'Twitter/X post: max 260 chars, punchy insight or hot take, no hashtags unless essential, optional question at end to drive replies.',
+  youtube_shorts: 'YouTube Shorts video script: bold 3-second hook (surprising fact or direct challenge), 40-60 second paced spoken narration with 3-4 punchy points, clear sign-off CTA. Write as natural spoken lines, no hashtags.',
 }
 
 export async function POST(req: NextRequest) {

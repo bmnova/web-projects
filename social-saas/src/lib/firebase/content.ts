@@ -5,7 +5,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore'
 import { getDb } from './config'
-import type { ContentAngle, Platform, ApprovalStatus } from '@/types'
+import type { ContentAngle, Platform, ApprovalStatus, AssetType } from '@/types'
 
 export async function saveContentIdea(
   workspaceId: string,
@@ -30,7 +30,7 @@ export async function saveContentIdea(
 export async function saveAsset(
   workspaceId: string,
   ideaId: string,
-  data: { platform: Platform; text: string; notes: string }
+  data: { platform: Platform; type: AssetType; content: Record<string, unknown> }
 ): Promise<string> {
   const db = getDb()
   const ref = doc(collection(db, 'workspaces', workspaceId, 'assets'))
@@ -39,8 +39,8 @@ export async function saveAsset(
     workspaceId,
     ideaId,
     platform: data.platform,
-    type: 'text',
-    content: { text: data.text, notes: data.notes },
+    type: data.type,
+    content: data.content,
     status: 'pending_approval' as ApprovalStatus,
     createdAt: serverTimestamp(),
   })

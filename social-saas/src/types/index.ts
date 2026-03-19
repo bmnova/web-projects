@@ -1,6 +1,8 @@
 import type { Timestamp } from 'firebase/firestore'
 
-export type Platform = 'reddit' | 'instagram' | 'tiktok' | 'youtube'
+export type Platform = 'reddit' | 'instagram' | 'tiktok' | 'youtube' | 'twitter' | 'youtube_shorts'
+
+export type Format = 'post' | 'thread' | 'carousel' | 'script'
 
 export type ApprovalStatus =
   | 'draft'
@@ -19,7 +21,7 @@ export type ContentAngle =
   | 'founder'
   | 'launch'
 
-export type AssetType = 'text' | 'carousel' | 'image' | 'video' | 'reddit_reply'
+export type AssetType = 'text' | 'carousel' | 'image' | 'video' | 'reddit_reply' | 'thread' | 'script'
 
 export type PublishMode = 'direct' | 'draft' | 'scheduled'
 

@@ -5,12 +5,35 @@ import { useAuth } from '@/lib/firebase/auth-context'
 import { Header } from '@/components/layout/Header'
 import {
   Layers, Sparkles, Copy, Check, ChevronDown, ChevronUp,
-  Loader2, RefreshCw, Send,
+  Loader2, RefreshCw, Send, FileText, List, LayoutGrid, Video,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { BrandProfile, ContentAngle, Platform } from '@/types'
+import type { BrandProfile, ContentAngle, Platform, Format, AssetType } from '@/types'
 
 // ── Constants ────────────────────────────────────────────────────────────────
+
+const FORMATS: { value: Format; label: string; Icon: React.ElementType; desc: string }[] = [
+  { value: 'post',     label: 'Post',     Icon: FileText,    desc: 'Metin paylaşımı' },
+  { value: 'thread',   label: 'Thread',   Icon: List,        desc: 'Tweet serisi' },
+  { value: 'carousel', label: 'Carousel', Icon: LayoutGrid,  desc: 'Slide içerik' },
+  { value: 'script',   label: 'Script',   Icon: Video,       desc: 'Video scripti' },
+]
+
+const FORMAT_PLATFORMS: Record<Format, Platform[]> = {
+  post:     ['reddit', 'twitter', 'instagram', 'youtube'],
+  thread:   ['twitter'],
+  carousel: ['instagram'],
+  script:   ['tiktok', 'youtube_shorts'],
+}
+
+const ALL_PLATFORMS: { value: Platform; label: string; emoji: string; limit: number }[] = [
+  { value: 'reddit',         label: 'Reddit',      emoji: '🟠', limit: 40000 },
+  { value: 'twitter',        label: 'X (Twitter)', emoji: '✕',  limit: 280   },
+  { value: 'instagram',      label: 'Instagram',   emoji: '📸', limit: 2200  },
+  { value: 'youtube',        label: 'YouTube',     emoji: '▶️', limit: 5000  },
+  { value: 'tiktok',         label: 'TikTok',      emoji: '🎵', limit: 2200  },
+  { value: 'youtube_shorts', label: 'YT Shorts',   emoji: '📱', limit: 1000  },
+]
 
 const ANGLES: { value: ContentAngle; label: string; desc: string }[] = [
   { value: 'pain_point',  label: 'Pain Point',  desc: 'Sorunu öne çıkar' },
@@ -19,13 +42,6 @@ const ANGLES: { value: ContentAngle; label: string; desc: string }[] = [
   { value: 'comparison',  label: 'Karşılaştır', desc: 'Rakiple kıyasla' },
   { value: 'founder',     label: 'Kurucu',      desc: 'Hikaye anlat' },
   { value: 'launch',      label: 'Lansman',     desc: 'Duyuru yap' },
-]
-
-const PLATFORMS: { value: Platform; label: string; emoji: string; limit: number }[] = [
-  { value: 'reddit',    label: 'Reddit',    emoji: '🟠', limit: 40000 },
-  { value: 'instagram', label: 'Instagram', emoji: '📸', limit: 2200  },
-  { value: 'tiktok',    label: 'TikTok',    emoji: '🎵', limit: 2200  },
-  { value: 'youtube',   label: 'YouTube',   emoji: '▶️', limit: 5000  },
 ]
 
 const TONE_LABELS: Record<string, string> = {
@@ -39,11 +55,10 @@ const TONE_LABELS: Record<string, string> = {
 
 interface Idea { title: string; hook: string }
 
-interface CachedContent {
-  text: string   // editable copy
-  notes: string
-  saved: boolean // sent to approvals
-}
+type PostEntry     = { type: 'post';     text: string; notes: string; saved: boolean }
+type ThreadEntry   = { type: 'thread';   tweets: string[]; saved: boolean }
+type CarouselEntry = { type: 'carousel'; cover: string; slides: { headline: string; body: string }[]; cta: string; saved: boolean }
+type CachedContent = PostEntry | ThreadEntry | CarouselEntry
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -85,30 +100,24 @@ function charLimitColor(len: number, limit: number) {
 export default function StudioPage() {
   const { user } = useAuth()
 
-  // brand
   const [brandData, setBrandData] = useState<Awaited<ReturnType<typeof loadBrandData>>>(null)
   const [loadingBrand, setLoadingBrand] = useState(true)
 
-  // form
+  const [format, setFormat] = useState<Format>('post')
   const [angle, setAngle] = useState<ContentAngle>('pain_point')
   const [platforms, setPlatforms] = useState<Platform[]>(['reddit'])
 
-  // ideas
   const [ideas, setIdeas] = useState<Idea[]>([])
   const [generating, setGenerating] = useState(false)
   const [genError, setGenError] = useState('')
 
-  // expanded idea
   const [expanded, setExpanded] = useState<number | null>(null)
   const [activePlatform, setActivePlatform] = useState<Platform>('reddit')
 
-  // content: key = `${ideaIdx}-${platform}`
   const [cache, setCache] = useState<Record<string, CachedContent>>({})
-  const [contentLoading, setContentLoading] = useState<string | null>(null) // key being loaded
+  const [contentLoading, setContentLoading] = useState<string | null>(null)
 
-  // copy
   const [copied, setCopied] = useState<string | null>(null)
-  // save
   const [saving, setSaving] = useState<string | null>(null)
 
   useEffect(() => {
@@ -116,11 +125,33 @@ export default function StudioPage() {
     loadBrandData(user.uid).then(setBrandData).finally(() => setLoadingBrand(false))
   }, [user])
 
-  // ── Actions ──────────────────────────────────────────────────────────────
+  // ── Format change ─────────────────────────────────────────────────────────
+
+  function handleFormatChange(f: Format) {
+    setFormat(f)
+    setIdeas([])
+    setExpanded(null)
+    setCache({})
+    const valid = FORMAT_PLATFORMS[f]
+    if (f === 'thread') {
+      setPlatforms(['twitter'])
+    } else if (f === 'carousel') {
+      setPlatforms(['instagram'])
+    } else {
+      const kept = platforms.filter(p => valid.includes(p))
+      setPlatforms(kept.length ? kept : [valid[0]])
+    }
+  }
+
+  // ── Platform toggle ───────────────────────────────────────────────────────
 
   function togglePlatform(p: Platform) {
+    const valid = FORMAT_PLATFORMS[format]
+    if (!valid.includes(p)) return
     setPlatforms(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p])
   }
+
+  // ── Idea generation ───────────────────────────────────────────────────────
 
   async function generateIdeas() {
     if (!brandData || platforms.length === 0) return
@@ -145,20 +176,50 @@ export default function StudioPage() {
     }
   }
 
+  // ── Content fetching ──────────────────────────────────────────────────────
+
   async function fetchContent(ideaIdx: number, platform: Platform, force = false) {
     if (!brandData) return
-    const key = `${ideaIdx}-${platform}`
+    const key = `${ideaIdx}-${platform}-${format}`
     if (cache[key] && !force) return
     setContentLoading(key)
     try {
-      const res = await fetch('/api/generate/content', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idea: ideas[ideaIdx], brandProfile: brandData.profile, platform }),
-      })
-      const data = await res.json()
-      if (data.error) throw new Error(data.error)
-      setCache(prev => ({ ...prev, [key]: { text: data.content, notes: data.notes, saved: false } }))
+      let entry: CachedContent
+
+      if (format === 'thread') {
+        const res = await fetch('/api/generate/thread', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idea: ideas[ideaIdx], brandProfile: brandData.profile }),
+        })
+        const data = await res.json()
+        if (data.error) throw new Error(data.error)
+        entry = { type: 'thread', tweets: data.tweets, saved: false }
+
+      } else if (format === 'carousel') {
+        const res = await fetch('/api/generate/carousel', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idea: ideas[ideaIdx], brandProfile: brandData.profile }),
+        })
+        const data = await res.json()
+        if (data.error) throw new Error(data.error)
+        entry = { type: 'carousel', cover: data.cover, slides: data.slides, cta: data.cta, saved: false }
+
+      } else {
+        const res = await fetch('/api/generate/content', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idea: ideas[ideaIdx], brandProfile: brandData.profile, platform }),
+        })
+        const data = await res.json()
+        if (data.error) throw new Error(data.error)
+        entry = { type: 'post', text: data.content, notes: data.notes, saved: false }
+      }
+
+      setCache(prev => ({ ...prev, [key]: entry }))
+    } catch {
+      // show nothing — user can retry
     } finally {
       setContentLoading(null)
     }
@@ -177,9 +238,37 @@ export default function StudioPage() {
     fetchContent(idx, p)
   }
 
-  function updateText(key: string, text: string) {
-    setCache(prev => ({ ...prev, [key]: { ...prev[key], text } }))
+  // ── Cache mutations ───────────────────────────────────────────────────────
+
+  function updatePostText(key: string, text: string) {
+    setCache(prev => ({ ...prev, [key]: { ...(prev[key] as PostEntry), text } }))
   }
+
+  function updateTweet(key: string, idx: number, text: string) {
+    setCache(prev => {
+      const e = prev[key] as ThreadEntry
+      const tweets = e.tweets.map((t, i) => i === idx ? text : t)
+      return { ...prev, [key]: { ...e, tweets } }
+    })
+  }
+
+  function updateCarouselCover(key: string, cover: string) {
+    setCache(prev => ({ ...prev, [key]: { ...(prev[key] as CarouselEntry), cover } }))
+  }
+
+  function updateSlide(key: string, idx: number, field: 'headline' | 'body', val: string) {
+    setCache(prev => {
+      const e = prev[key] as CarouselEntry
+      const slides = e.slides.map((s, i) => i === idx ? { ...s, [field]: val } : s)
+      return { ...prev, [key]: { ...e, slides } }
+    })
+  }
+
+  function updateCarouselCta(key: string, cta: string) {
+    setCache(prev => ({ ...prev, [key]: { ...(prev[key] as CarouselEntry), cta } }))
+  }
+
+  // ── Copy ──────────────────────────────────────────────────────────────────
 
   async function copyContent(text: string, key: string) {
     await navigator.clipboard.writeText(text)
@@ -187,9 +276,20 @@ export default function StudioPage() {
     setTimeout(() => setCopied(null), 1500)
   }
 
+  function copyableText(entry: CachedContent): string {
+    if (entry.type === 'thread') return entry.tweets.join('\n\n')
+    if (entry.type === 'carousel') {
+      const slides = entry.slides.map((s, i) => `Slide ${i + 1}: ${s.headline}\n${s.body}`).join('\n\n')
+      return `Cover: ${entry.cover}\n\n${slides}\n\nCTA: ${entry.cta}`
+    }
+    return entry.text
+  }
+
+  // ── Save to approvals ─────────────────────────────────────────────────────
+
   async function sendToApprovals(ideaIdx: number, platform: Platform) {
     if (!brandData) return
-    const key = `${ideaIdx}-${platform}`
+    const key = `${ideaIdx}-${platform}-${format}`
     const entry = cache[key]
     if (!entry) return
     setSaving(key)
@@ -200,12 +300,23 @@ export default function StudioPage() {
         brandData.brandProfileId,
         { title: ideas[ideaIdx].title, angle, platforms }
       )
-      await saveAsset(brandData.workspaceId, ideaId, {
-        platform,
-        text: entry.text,
-        notes: entry.notes,
-      })
-      setCache(prev => ({ ...prev, [key]: { ...prev[key], saved: true } }))
+
+      let assetType: AssetType
+      let content: Record<string, unknown>
+
+      if (entry.type === 'thread') {
+        assetType = 'thread'
+        content = { tweets: entry.tweets }
+      } else if (entry.type === 'carousel') {
+        assetType = 'carousel'
+        content = { cover: entry.cover, slides: entry.slides, cta: entry.cta }
+      } else {
+        assetType = format === 'script' ? 'script' : 'text'
+        content = { text: entry.text, notes: entry.notes }
+      }
+
+      await saveAsset(brandData.workspaceId, ideaId, { platform, type: assetType, content })
+      setCache(prev => ({ ...prev, [key]: { ...prev[key], saved: true } as CachedContent }))
     } finally {
       setSaving(null)
     }
@@ -232,7 +343,7 @@ export default function StudioPage() {
           <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
             <Layers className="w-10 h-10 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500 text-sm">
-              Önce <a href="/onboarding" className="text-blue-600 hover:underline">onboarding</a>'i tamamla.
+              Önce <a href="/onboarding" className="text-blue-600 hover:underline">onboarding</a>&apos;i tamamla.
             </p>
           </div>
         </main>
@@ -241,6 +352,8 @@ export default function StudioPage() {
   }
 
   const { profile } = brandData
+  const validPlatforms = ALL_PLATFORMS.filter(p => FORMAT_PLATFORMS[format].includes(p.value))
+  const isSinglePlatform = FORMAT_PLATFORMS[format].length === 1
 
   return (
     <>
@@ -263,6 +376,32 @@ export default function StudioPage() {
 
         {/* Generate Form */}
         <div className="bg-white border border-gray-200 rounded-xl p-5 mb-6 space-y-5">
+
+          {/* Format */}
+          <div>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Format</p>
+            <div className="grid grid-cols-4 gap-2">
+              {FORMATS.map(f => {
+                const Icon = f.Icon
+                return (
+                  <button
+                    key={f.value}
+                    onClick={() => handleFormatChange(f.value)}
+                    className={cn(
+                      'text-left px-3 py-2.5 rounded-lg border text-sm transition',
+                      format === f.value
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                    )}
+                  >
+                    <Icon className="w-4 h-4 mb-1" />
+                    <span className="font-medium block">{f.label}</span>
+                    <span className="text-xs opacity-60">{f.desc}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
 
           {/* Angle */}
           <div>
@@ -288,17 +427,19 @@ export default function StudioPage() {
 
           {/* Platforms */}
           <div>
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Platformlar</p>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Platform</p>
             <div className="flex flex-wrap gap-2">
-              {PLATFORMS.map(p => (
+              {validPlatforms.map(p => (
                 <button
                   key={p.value}
-                  onClick={() => togglePlatform(p.value)}
+                  onClick={() => !isSinglePlatform && togglePlatform(p.value)}
+                  disabled={isSinglePlatform}
                   className={cn(
                     'flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm font-medium transition',
                     platforms.includes(p.value)
                       ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                      : 'border-gray-200 text-gray-600 hover:border-gray-300',
+                    isSinglePlatform && 'cursor-default'
                   )}
                 >
                   <span>{p.emoji}</span> {p.label}
@@ -330,10 +471,10 @@ export default function StudioPage() {
 
             {ideas.map((idea, idx) => {
               const isOpen = expanded === idx
-              const key = `${idx}-${activePlatform}`
+              const key = `${idx}-${activePlatform}-${format}`
               const entry = cache[key]
               const isLoading = contentLoading === key
-              const platformMeta = PLATFORMS.find(p => p.value === activePlatform)!
+              const platformMeta = ALL_PLATFORMS.find(p => p.value === activePlatform)!
 
               return (
                 <div key={idx} className="bg-white border border-gray-200 rounded-xl overflow-hidden">
@@ -359,26 +500,28 @@ export default function StudioPage() {
                   {isOpen && (
                     <div className="border-t border-gray-100 p-4 space-y-4">
 
-                      {/* Platform Tabs */}
-                      <div className="flex gap-1">
-                        {platforms.map(p => {
-                          const pm = PLATFORMS.find(x => x.value === p)!
-                          return (
-                            <button
-                              key={p}
-                              onClick={() => handlePlatformTab(idx, p)}
-                              className={cn(
-                                'flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition',
-                                activePlatform === p
-                                  ? 'bg-blue-600 text-white'
-                                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                              )}
-                            >
-                              {pm.emoji} {pm.label}
-                            </button>
-                          )
-                        })}
-                      </div>
+                      {/* Platform Tabs — only shown when multiple platforms */}
+                      {!isSinglePlatform && platforms.length > 1 && (
+                        <div className="flex gap-1">
+                          {platforms.map(p => {
+                            const pm = ALL_PLATFORMS.find(x => x.value === p)!
+                            return (
+                              <button
+                                key={p}
+                                onClick={() => handlePlatformTab(idx, p)}
+                                className={cn(
+                                  'flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition',
+                                  activePlatform === p
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                )}
+                              >
+                                {pm.emoji} {pm.label}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      )}
 
                       {/* Content area */}
                       {isLoading ? (
@@ -389,44 +532,123 @@ export default function StudioPage() {
                       ) : entry ? (
                         <div className="space-y-3">
 
-                          {/* Textarea + toolbar */}
-                          <div className="relative">
-                            <textarea
-                              className="w-full border border-gray-200 rounded-lg p-3 pr-10 text-sm text-gray-800 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
-                              rows={8}
-                              value={entry.text}
-                              onChange={e => updateText(key, e.target.value)}
-                            />
-                            {/* Copy */}
-                            <button
-                              onClick={() => copyContent(entry.text, key)}
-                              className="absolute top-2 right-2 p-1.5 rounded-md bg-white border border-gray-200 text-gray-500 hover:text-gray-900 transition"
-                              title="Kopyala"
-                            >
-                              {copied === key
-                                ? <Check className="w-3.5 h-3.5 text-green-600" />
-                                : <Copy className="w-3.5 h-3.5" />}
-                            </button>
-
-                            {/* Character count */}
-                            <span className={cn(
-                              'absolute bottom-2 right-2 text-xs',
-                              charLimitColor(entry.text.length, platformMeta.limit)
-                            )}>
-                              {entry.text.length.toLocaleString()} / {platformMeta.limit.toLocaleString()}
-                            </span>
-                          </div>
-
-                          {/* Notes */}
-                          {entry.notes && (
-                            <p className="text-xs text-gray-400 bg-gray-50 rounded-lg p-3 border border-gray-100">
-                              💡 {entry.notes}
-                            </p>
+                          {/* ── Post / Script ── */}
+                          {entry.type === 'post' && (
+                            <>
+                              <div className="relative">
+                                <textarea
+                                  className="w-full border border-gray-200 rounded-lg p-3 pr-10 text-sm text-gray-800 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                                  rows={8}
+                                  value={entry.text}
+                                  onChange={e => updatePostText(key, e.target.value)}
+                                />
+                                <button
+                                  onClick={() => copyContent(entry.text, key)}
+                                  className="absolute top-2 right-2 p-1.5 rounded-md bg-white border border-gray-200 text-gray-500 hover:text-gray-900 transition"
+                                >
+                                  {copied === key
+                                    ? <Check className="w-3.5 h-3.5 text-green-600" />
+                                    : <Copy className="w-3.5 h-3.5" />}
+                                </button>
+                                <span className={cn(
+                                  'absolute bottom-2 right-2 text-xs',
+                                  charLimitColor(entry.text.length, platformMeta.limit)
+                                )}>
+                                  {entry.text.length.toLocaleString()} / {platformMeta.limit.toLocaleString()}
+                                </span>
+                              </div>
+                              {entry.notes && (
+                                <p className="text-xs text-gray-400 bg-gray-50 rounded-lg p-3 border border-gray-100">
+                                  💡 {entry.notes}
+                                </p>
+                              )}
+                            </>
                           )}
 
-                          {/* Actions row */}
-                          <div className="flex items-center justify-between gap-2">
-                            {/* Regenerate */}
+                          {/* ── Thread ── */}
+                          {entry.type === 'thread' && (
+                            <div className="space-y-2">
+                              {entry.tweets.map((tweet, tIdx) => (
+                                <div key={tIdx} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                                  <div className="flex items-start gap-2">
+                                    <span className="text-xs text-gray-400 font-mono shrink-0 mt-1 w-4">{tIdx + 1}</span>
+                                    <textarea
+                                      className="flex-1 text-sm text-gray-800 bg-transparent resize-none focus:outline-none"
+                                      rows={Math.max(2, Math.ceil(tweet.length / 60))}
+                                      value={tweet}
+                                      onChange={e => updateTweet(key, tIdx, e.target.value)}
+                                    />
+                                  </div>
+                                  <div className="flex justify-end mt-1">
+                                    <span className={cn('text-xs', tweet.length > 260 ? 'text-red-500' : 'text-gray-400')}>
+                                      {tweet.length}/280
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
+                              <button
+                                onClick={() => copyContent(copyableText(entry), key)}
+                                className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-800 transition mt-1"
+                              >
+                                {copied === key
+                                  ? <><Check className="w-3.5 h-3.5 text-green-600" /> Kopyalandı</>
+                                  : <><Copy className="w-3.5 h-3.5" /> Tüm thread&apos;i kopyala</>}
+                              </button>
+                            </div>
+                          )}
+
+                          {/* ── Carousel ── */}
+                          {entry.type === 'carousel' && (
+                            <div className="space-y-2">
+                              {/* Cover */}
+                              <div className="bg-blue-600 rounded-lg p-4 text-white">
+                                <p className="text-xs font-semibold uppercase tracking-wide mb-1 opacity-60">Cover</p>
+                                <input
+                                  className="w-full bg-transparent font-bold text-base focus:outline-none placeholder-white/50"
+                                  value={entry.cover}
+                                  onChange={e => updateCarouselCover(key, e.target.value)}
+                                />
+                              </div>
+                              {/* Slides */}
+                              {entry.slides.map((slide, sIdx) => (
+                                <div key={sIdx} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                                  <p className="text-xs text-gray-400 mb-2">Slide {sIdx + 1}</p>
+                                  <input
+                                    className="w-full font-semibold text-sm text-gray-900 bg-transparent focus:outline-none mb-1 border-b border-transparent focus:border-gray-300 pb-1"
+                                    value={slide.headline}
+                                    onChange={e => updateSlide(key, sIdx, 'headline', e.target.value)}
+                                    placeholder="Slide başlığı"
+                                  />
+                                  <textarea
+                                    className="w-full text-sm text-gray-600 bg-transparent resize-none focus:outline-none mt-2"
+                                    rows={2}
+                                    value={slide.body}
+                                    onChange={e => updateSlide(key, sIdx, 'body', e.target.value)}
+                                  />
+                                </div>
+                              ))}
+                              {/* CTA */}
+                              <div className="bg-gray-900 rounded-lg p-4 text-white">
+                                <p className="text-xs font-semibold uppercase tracking-wide mb-1 opacity-60">CTA</p>
+                                <input
+                                  className="w-full bg-transparent text-sm focus:outline-none"
+                                  value={entry.cta}
+                                  onChange={e => updateCarouselCta(key, e.target.value)}
+                                />
+                              </div>
+                              <button
+                                onClick={() => copyContent(copyableText(entry), key)}
+                                className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-800 transition"
+                              >
+                                {copied === key
+                                  ? <><Check className="w-3.5 h-3.5 text-green-600" /> Kopyalandı</>
+                                  : <><Copy className="w-3.5 h-3.5" /> Tümünü kopyala</>}
+                              </button>
+                            </div>
+                          )}
+
+                          {/* ── Actions row ── */}
+                          <div className="flex items-center justify-between gap-2 pt-1">
                             <button
                               onClick={() => fetchContent(idx, activePlatform, true)}
                               className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-800 transition"
@@ -435,7 +657,6 @@ export default function StudioPage() {
                               Yeniden üret
                             </button>
 
-                            {/* Send to approvals */}
                             {entry.saved ? (
                               <span className="flex items-center gap-1.5 text-xs text-green-600 font-medium">
                                 <Check className="w-3.5 h-3.5" /> Onay kuyruğuna eklendi
