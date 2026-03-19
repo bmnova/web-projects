@@ -1,4 +1,5 @@
 import type { Timestamp } from 'firebase/firestore'
+import type { Plan } from '@/lib/firebase/billing-shared'
 
 export type Platform = 'reddit' | 'instagram' | 'tiktok' | 'youtube' | 'twitter' | 'youtube_shorts'
 
@@ -36,12 +37,17 @@ export type AccountStatus = 'connected' | 'expired' | 'error'
 
 export type RedditIntent = 'question' | 'complaint' | 'recommendation' | 'discussion'
 
+export type { Plan } from '@/lib/firebase/billing-shared'
+
 export interface User {
   id: string
   email: string
   displayName: string
   photoURL?: string
   workspaceIds: string[]
+  plan?: Plan
+  paddleSubscriptionId?: string
+  paddleCustomerId?: string
   createdAt: Timestamp
 }
 

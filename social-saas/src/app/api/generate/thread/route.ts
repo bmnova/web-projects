@@ -4,6 +4,16 @@ import type { BrandProfile } from '@/types'
 
 export async function POST(req: NextRequest) {
   try {
+    const { getAuthUid } = await import('@/lib/api-auth')
+    const { checkAndIncrementUsage } = await import('@/lib/firebase/usage')
+    const uid = await getAuthUid(req)
+    await checkAndIncrementUsage(uid)
+  } catch (err: unknown) {
+    const e = err as { message?: string; status?: number }
+    return NextResponse.json({ error: e.message ?? 'Unauthorized' }, { status: e.status ?? 401 })
+  }
+
+  try {
     const { idea, brandProfile } = (await req.json()) as {
       idea: { title: string; hook: string }
       brandProfile: BrandProfile

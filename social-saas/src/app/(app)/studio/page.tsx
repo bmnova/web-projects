@@ -154,16 +154,17 @@ export default function StudioPage() {
   // ── Idea generation ───────────────────────────────────────────────────────
 
   async function generateIdeas() {
-    if (!brandData || platforms.length === 0) return
+    if (!brandData || platforms.length === 0 || !user) return
     setGenerating(true)
     setGenError('')
     setIdeas([])
     setExpanded(null)
     setCache({})
     try {
+      const token = await user.getIdToken()
       const res = await fetch('/api/generate/ideas', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ brandProfile: brandData.profile, angle, platforms }),
       })
       const data = await res.json()
@@ -179,17 +180,19 @@ export default function StudioPage() {
   // ── Content fetching ──────────────────────────────────────────────────────
 
   async function fetchContent(ideaIdx: number, platform: Platform, force = false) {
-    if (!brandData) return
+    if (!brandData || !user) return
     const key = `${ideaIdx}-${platform}-${format}`
     if (cache[key] && !force) return
     setContentLoading(key)
     try {
       let entry: CachedContent
+      const token = await user.getIdToken()
+      const authHeader = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
 
       if (format === 'thread') {
         const res = await fetch('/api/generate/thread', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: authHeader,
           body: JSON.stringify({ idea: ideas[ideaIdx], brandProfile: brandData.profile }),
         })
         const data = await res.json()
@@ -199,7 +202,7 @@ export default function StudioPage() {
       } else if (format === 'carousel') {
         const res = await fetch('/api/generate/carousel', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: authHeader,
           body: JSON.stringify({ idea: ideas[ideaIdx], brandProfile: brandData.profile }),
         })
         const data = await res.json()
@@ -209,7 +212,7 @@ export default function StudioPage() {
       } else {
         const res = await fetch('/api/generate/content', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: authHeader,
           body: JSON.stringify({ idea: ideas[ideaIdx], brandProfile: brandData.profile, platform }),
         })
         const data = await res.json()
