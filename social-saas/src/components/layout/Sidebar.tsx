@@ -10,6 +10,7 @@ import {
   CalendarDays,
   Settings,
   Zap,
+  CreditCard,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -56,13 +57,25 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Settings */}
-      <div className="px-3 py-3 border-t border-gray-200">
+      {/* Bottom links */}
+      <div className="px-3 py-3 border-t border-gray-200 space-y-0.5">
+        <Link
+          href="/settings/billing"
+          className={cn(
+            'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition',
+            pathname === '/settings/billing'
+              ? 'bg-blue-50 text-blue-700'
+              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+          )}
+        >
+          <CreditCard className="w-4 h-4 shrink-0" />
+          Billing
+        </Link>
         <Link
           href="/settings"
           className={cn(
             'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition',
-            pathname.startsWith('/settings')
+            pathname.startsWith('/settings') && pathname !== '/settings/billing'
               ? 'bg-blue-50 text-blue-700'
               : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
           )}
