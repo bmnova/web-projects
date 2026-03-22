@@ -27,27 +27,27 @@ const PLANS: {
     id: 'starter',
     name: 'Starter',
     price: '$19',
-    period: '/ay',
-    limit: '150 üretim/ay',
-    features: ['1 workspace', 'Tüm formatlar & platformlar', 'Onay akışı', 'Scheduler'],
+    period: '/mo',
+    limit: '150 generations / month',
+    features: ['1 workspace', 'All formats & platforms', 'Approvals', 'Scheduler'],
     priceEnvKey: 'NEXT_PUBLIC_PADDLE_PRICE_STARTER',
   },
   {
     id: 'pro',
     name: 'Pro',
     price: '$49',
-    period: '/ay',
-    limit: 'Sınırsız üretim',
-    features: ['3 workspace', 'Takım üyeleri', 'Onay + Scheduler', 'Analitik', 'Öncelikli destek'],
+    period: '/mo',
+    limit: 'Unlimited generations',
+    features: ['3 workspaces', 'Team seats', 'Approvals + scheduler', 'Analytics', 'Priority support'],
     priceEnvKey: 'NEXT_PUBLIC_PADDLE_PRICE_PRO',
   },
   {
     id: 'agency',
     name: 'Agency',
     price: '$99',
-    period: '/ay',
-    limit: 'Sınırsız üretim',
-    features: ['10 workspace', 'Sınırsız takım üyesi', 'White-label', 'Özel destek'],
+    period: '/mo',
+    limit: 'Unlimited generations',
+    features: ['10 workspaces', 'Unlimited team seats', 'White-label', 'Dedicated support'],
     priceEnvKey: 'NEXT_PUBLIC_PADDLE_PRICE_AGENCY',
   },
 ]
@@ -93,7 +93,7 @@ export default function BillingPage() {
     if (!user) return
     const priceId = PRICE_IDS[planId]
     if (!priceId) {
-      alert('Paddle fiyat ID tanımlı değil. .env dosyasını kontrol et.')
+      alert('Paddle price ID is not configured. Check your .env file.')
       return
     }
 
@@ -130,7 +130,7 @@ export default function BillingPage() {
 
         {/* Current plan */}
         <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Mevcut Plan</p>
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Current plan</p>
 
           {loading ? (
             <Loader2 className="w-5 h-5 animate-spin text-gray-300" />
@@ -143,9 +143,9 @@ export default function BillingPage() {
                   </span>
                 </div>
                 <p className="text-xs text-gray-500">
-                  Bu ay:{' '}
+                  This month:{' '}
                   <strong className="text-gray-800">
-                    {billing.usage}{billing.limit > 0 ? ` / ${billing.limit}` : ''} üretim
+                    {billing.usage}{billing.limit > 0 ? ` / ${billing.limit}` : ''} generations
                   </strong>
                 </p>
                 {billing.limit > 0 && (
@@ -163,7 +163,7 @@ export default function BillingPage() {
                   className="flex items-center gap-1.5 text-sm text-blue-600 font-medium hover:underline"
                 >
                   <Zap className="w-3.5 h-3.5" />
-                  Planı Yükselt
+                  Upgrade plan
                 </a>
               )}
             </div>
@@ -204,7 +204,7 @@ export default function BillingPage() {
 
                 {isCurrentPlan ? (
                   <div className="text-center text-xs text-blue-600 font-semibold py-2">
-                    Aktif Plan
+                    Current plan
                   </div>
                 ) : (
                   <button
@@ -213,8 +213,8 @@ export default function BillingPage() {
                     className="flex items-center justify-center gap-1.5 w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2 rounded-lg transition disabled:opacity-50"
                   >
                     {isLoading
-                      ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Yükleniyor…</>
-                      : <><ArrowUpRight className="w-3.5 h-3.5" /> {plan.name}&apos;a Geç</>
+                      ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading…</>
+                      : <><ArrowUpRight className="w-3.5 h-3.5" /> Switch to {plan.name}</>
                     }
                   </button>
                 )}
@@ -224,7 +224,7 @@ export default function BillingPage() {
         </div>
 
         <p className="text-xs text-gray-400 text-center mt-4">
-          Ödemeler Paddle üzerinden güvenli şekilde işlenir. İstediğin zaman iptal edebilirsin.
+          Payments are processed securely by Paddle. Cancel anytime.
         </p>
       </main>
     </>

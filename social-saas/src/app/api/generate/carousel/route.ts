@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { authUsageErrorResponse } from '@/lib/api-error-response'
 import { generateText } from '@/lib/ai/gemini'
 import type { BrandProfile } from '@/types'
 
@@ -9,8 +10,7 @@ export async function POST(req: NextRequest) {
     const uid = await getAuthUid(req)
     await checkAndIncrementUsage(uid)
   } catch (err: unknown) {
-    const e = err as { message?: string; status?: number }
-    return NextResponse.json({ error: e.message ?? 'Unauthorized' }, { status: e.status ?? 401 })
+    return authUsageErrorResponse(err)
   }
 
   try {

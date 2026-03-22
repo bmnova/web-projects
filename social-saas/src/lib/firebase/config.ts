@@ -1,10 +1,10 @@
-// Firebase istemci SDK — yalnızca tarayıcıda başlatılır (SSR güvenli)
+// Firebase client SDK — initialized only in the browser (SSR-safe)
 import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app'
 import { getAuth, type Auth } from 'firebase/auth'
 import { getFirestore, type Firestore } from 'firebase/firestore'
 import { getStorage, type FirebaseStorage } from 'firebase/storage'
 
-/** Şablondan kopyalanan `<proje.firebaseapp.com>` gibi sarmalayıcıları kaldırır (geçersiz auth URL önler). */
+/** Strip angle brackets from template values like `<project.firebaseapp.com>` to avoid invalid auth URLs. */
 function envFirebaseString(raw: string | undefined): string | undefined {
   if (raw == null || raw === '') return undefined
   let s = raw.trim()

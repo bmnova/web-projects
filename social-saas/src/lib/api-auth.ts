@@ -1,4 +1,4 @@
-function firebaseAdminConfigured(): boolean {
+export function firebaseAdminConfigured(): boolean {
   if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) return true
   const pk = process.env.FIREBASE_ADMIN_PRIVATE_KEY
   const em = process.env.FIREBASE_ADMIN_CLIENT_EMAIL
@@ -8,7 +8,7 @@ function firebaseAdminConfigured(): boolean {
 
 /**
  * Extracts and verifies the Firebase ID token from the Authorization header.
- * Admin credential yoksa (yerel deneme) doğrulama atlanır, 'dev-user' döner.
+ * If admin credentials are missing (local dev), skips verification and returns `dev-user`.
  */
 export async function getAuthUid(req: Request): Promise<string> {
   if (!firebaseAdminConfigured()) {

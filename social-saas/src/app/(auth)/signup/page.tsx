@@ -18,7 +18,7 @@ export default function SignupPage() {
     e.preventDefault()
     setError('')
     if (password.length < 6) {
-      setError('Şifre en az 6 karakter olmalı.')
+      setError('Password must be at least 6 characters.')
       return
     }
     setLoading(true)
@@ -26,7 +26,7 @@ export default function SignupPage() {
       await signUp(email, password, name)
       router.push('/onboarding')
     } catch {
-      setError('Kayıt başarısız. Bu e-posta zaten kullanılıyor olabilir.')
+      setError('Sign-up failed. This email may already be in use.')
     } finally {
       setLoading(false)
     }
@@ -39,7 +39,7 @@ export default function SignupPage() {
       await signInWithGoogle()
       router.push('/onboarding')
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Google ile kayıt başarısız.')
+      setError(e instanceof Error ? e.message : 'Google sign-up failed.')
     } finally {
       setLoading(false)
     }
@@ -48,9 +48,9 @@ export default function SignupPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">Ücretsiz Başla</h1>
-        <p className="text-gray-500 text-sm mb-6">Zaten hesabın var mı?{' '}
-          <Link href="/login" className="text-blue-600 hover:underline">Giriş yap</Link>
+        <h1 className="text-2xl font-bold text-gray-900 mb-1">Get started free</h1>
+        <p className="text-gray-500 text-sm mb-6">Already have an account?{' '}
+          <Link href="/login" className="text-blue-600 hover:underline">Log in</Link>
         </p>
 
         <button
@@ -64,29 +64,29 @@ export default function SignupPage() {
             <path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/>
             <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
           </svg>
-          Google ile devam et
+          Continue with Google
         </button>
 
         <div className="flex items-center gap-3 mb-4">
           <div className="flex-1 h-px bg-gray-200" />
-          <span className="text-xs text-gray-400">veya</span>
+          <span className="text-xs text-gray-400">or</span>
           <div className="flex-1 h-px bg-gray-200" />
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Ad Soyad</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Full name</label>
             <input
               type="text"
               required
               value={name}
               onChange={e => setName(e.target.value)}
               className="w-full border border-gray-300 rounded-lg bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Adın"
+              placeholder="Your name"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">E-posta</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <input
               type="email"
               required
@@ -97,14 +97,14 @@ export default function SignupPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Şifre</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
             <input
               type="password"
               required
               value={password}
               onChange={e => setPassword(e.target.value)}
               className="w-full border border-gray-300 rounded-lg bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="En az 6 karakter"
+              placeholder="At least 6 characters"
             />
           </div>
           {error && <p className="text-red-600 text-sm">{error}</p>}
@@ -113,7 +113,7 @@ export default function SignupPage() {
             disabled={loading}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg text-sm transition disabled:opacity-50"
           >
-            {loading ? 'Hesap oluşturuluyor…' : 'Hesap Oluştur'}
+            {loading ? 'Creating account…' : 'Create account'}
           </button>
         </form>
       </div>

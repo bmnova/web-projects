@@ -9,7 +9,7 @@ export default function ResearchPage() {
         <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
           <Search className="w-10 h-10 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 text-sm">
-            Reddit araştırma modülü yakında. Subreddit ve anahtar kelimelerini ekle.
+            Reddit research module coming soon. You will add subreddits and keywords here.
           </p>
         </div>
       </main>

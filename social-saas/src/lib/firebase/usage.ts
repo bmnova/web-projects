@@ -1,8 +1,16 @@
+import { AI_QUOTA_EXCEEDED_CODE } from '@/lib/ai-quota'
+
 export const PLAN_LIMITS: Record<string, number> = {
   free:    15,
   starter: 150,
   pro:     -1,   // unlimited
   agency:  -1,   // unlimited
+}
+
+/** When true, skips quota checks and increments (local / staging tests). Server-only env. */
+export function isAiQuotaGloballyDisabled(): boolean {
+  const v = process.env.DISABLE_AI_QUOTA
+  return v === 'true' || v === '1'
 }
 
 /**
@@ -11,6 +19,7 @@ export const PLAN_LIMITS: Record<string, number> = {
  */
 export async function checkAndIncrementUsage(uid: string): Promise<void> {
   if (uid === 'dev-user') return
+  if (isAiQuotaGloballyDisabled()) return
 
   const { getAdminDb } = await import('./admin')
   const db = getAdminDb()
@@ -29,8 +38,10 @@ export async function checkAndIncrementUsage(uid: string): Promise<void> {
     const count: number = snap.data()?.count ?? 0
     if (count >= limit) {
       throw Object.assign(
-        new Error(`Aylık limit doldu (${limit} üretim). Planını yükselt.`),
-        { status: 429 }
+        new Error(
+          "You've used all AI generations included in your plan this month. Upgrade to keep creating."
+        ),
+        { status: 429, code: AI_QUOTA_EXCEEDED_CODE }
       )
     }
     tx.set(usageRef, { count: count + 1, plan, limit }, { merge: true })
@@ -48,6 +59,11 @@ export async function getUsage(uid: string): Promise<{ count: number; limit: num
 
   const userSnap = await db.doc(`users/${uid}`).get()
   const plan: string = userSnap.data()?.plan ?? 'free'
+
+  if (isAiQuotaGloballyDisabled()) {
+    return { count: 0, limit: -1, plan }
+  }
+
   const limit = PLAN_LIMITS[plan] ?? 15
 
   const month = new Date().toISOString().slice(0, 7)

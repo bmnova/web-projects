@@ -8,29 +8,29 @@ function googleSignInErrorMessage(err: unknown): string {
   if (err instanceof FirebaseError) {
     switch (err.code) {
       case 'auth/unauthorized-domain':
-        return 'Bu site adresi Firebase’de yetkili değil. Authentication → Settings → Authorized domains’e bu hostname’i ekleyin.'
+        return 'This domain is not authorized in Firebase. Add it under Authentication → Settings → Authorized domains.'
       case 'auth/operation-not-allowed':
-        return 'Google ile giriş kapalı. Firebase Console → Authentication → Sign-in method’ta Google’ı açın.'
+        return 'Google sign-in is disabled. Enable Google under Firebase Console → Authentication → Sign-in method.'
       case 'auth/account-exists-with-different-credential':
-        return 'Bu e-posta başka bir giriş yöntemiyle kayıtlı.'
+        return 'This email is already registered with a different sign-in method.'
       case 'auth/popup-closed-by-user':
-        return 'Google penceresi kapatıldı.'
+        return 'The Google sign-in popup was closed.'
       case 'auth/network-request-failed':
-        return 'Ağ hatası. Bağlantıyı ve reklam engelleyiciyi kontrol edin.'
+        return 'Network error. Check your connection and any ad blockers.'
       case 'auth/internal-error':
-        return 'Firebase iç hatası. Tarayıcı önbelleğini deneyin veya farklı tarayıcı kullanın.'
+        return 'Firebase internal error. Try clearing cache or another browser.'
       case 'invalid-api-key':
       case 'auth/invalid-api-key':
-        return 'Geçersiz veya eksik API anahtarı. Vercel’de tüm NEXT_PUBLIC_FIREBASE_* ortam değişkenlerinin build’te tanımlı olduğundan emin olun.'
+        return 'Invalid or missing API key. Ensure all NEXT_PUBLIC_FIREBASE_* env vars are set at build time (e.g. on Vercel).'
       case 'permission-denied':
-        return 'Profil kaydı Firestore tarafından reddedildi. firestore.rules deploy edildi mi kontrol edin.'
+        return 'Profile write was denied by Firestore. Check that firestore.rules are deployed.'
       default:
         break
     }
     if (err.message) return err.message
   }
   if (err instanceof Error && err.message) return err.message
-  return 'Google ile giriş başarısız.'
+  return 'Google sign-in failed.'
 }
 
 async function ensureUserFirestoreProfile(u: User): Promise<void> {
@@ -66,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Firebase'i yalnızca tarayıcıda dynamic import ile yükle (SSR sırasında çalışmaz)
+    // Load Firebase only in the browser via dynamic import (not during SSR)
     let unsubscribe: (() => void) | undefined
 
     async function initAuth() {
@@ -123,7 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       typeof process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN !== 'string' ||
       !process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
     ) {
-      throw new Error('Firebase yapılandırması eksik: .env.local içinde NEXT_PUBLIC_FIREBASE_* değişkenlerini doldurun.')
+      throw new Error('Firebase is not configured: set NEXT_PUBLIC_FIREBASE_* in .env.local.')
     }
     const auth = getAuth_()
     const provider = new GoogleAuthProvider()

@@ -1,4 +1,4 @@
-// Tip güvenlik testleri — derleme zamanında çalışır, runtime'da sadece import kontrol edilir
+// Type smoke tests — compile-time; runtime only checks imports resolve
 import type {
   Platform,
   ApprovalStatus,
@@ -11,13 +11,13 @@ import type {
   RedditIntent,
 } from '@/types'
 
-describe('Tip tanımları', () => {
-  it('Platform tipi doğru değerleri içerir', () => {
+describe('Type definitions', () => {
+  it('Platform includes expected values', () => {
     const platforms: Platform[] = ['reddit', 'instagram', 'tiktok', 'youtube']
     expect(platforms).toHaveLength(4)
   })
 
-  it('ApprovalStatus tipi doğru değerleri içerir', () => {
+  it('ApprovalStatus includes expected values', () => {
     const statuses: ApprovalStatus[] = [
       'draft',
       'pending_approval',
@@ -28,12 +28,12 @@ describe('Tip tanımları', () => {
     expect(statuses).toHaveLength(5)
   })
 
-  it('ToneOfVoice tipi 4 seçenek içerir', () => {
+  it('ToneOfVoice has 4 options', () => {
     const tones: ToneOfVoice[] = ['professional', 'casual', 'humorous', 'educational']
     expect(tones).toHaveLength(4)
   })
 
-  it('ContentAngle tipi 6 seçenek içerir', () => {
+  it('ContentAngle has 6 options', () => {
     const angles: ContentAngle[] = [
       'pain_point',
       'feature',
@@ -45,12 +45,12 @@ describe('Tip tanımları', () => {
     expect(angles).toHaveLength(6)
   })
 
-  it('JobStatus tipi doğru değerleri içerir', () => {
+  it('JobStatus includes expected values', () => {
     const statuses: JobStatus[] = ['queued', 'processing', 'completed', 'failed', 'retrying']
     expect(statuses).toHaveLength(5)
   })
 
-  it('PublishMode tipi 3 seçenek içerir', () => {
+  it('PublishMode has 3 options', () => {
     const modes: PublishMode[] = ['direct', 'draft', 'scheduled']
     expect(modes).toHaveLength(3)
   })

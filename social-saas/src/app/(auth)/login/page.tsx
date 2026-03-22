@@ -21,7 +21,7 @@ export default function LoginPage() {
       await signIn(email, password)
       router.push('/dashboard')
     } catch {
-      setError('E-posta veya şifre hatalı.')
+      setError('Invalid email or password.')
     } finally {
       setLoading(false)
     }
@@ -34,7 +34,7 @@ export default function LoginPage() {
       await signInWithGoogle()
       router.push('/dashboard')
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Google ile giriş başarısız.')
+      setError(e instanceof Error ? e.message : 'Google sign-in failed.')
     } finally {
       setLoading(false)
     }
@@ -43,9 +43,9 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">Giriş Yap</h1>
-        <p className="text-gray-500 text-sm mb-6">Hesabın yoksa{' '}
-          <Link href="/signup" className="text-blue-600 hover:underline">ücretsiz kayıt ol</Link>
+        <h1 className="text-2xl font-bold text-gray-900 mb-1">Log in</h1>
+        <p className="text-gray-500 text-sm mb-6">No account?{' '}
+          <Link href="/signup" className="text-blue-600 hover:underline">Sign up free</Link>
         </p>
 
         <button
@@ -59,18 +59,18 @@ export default function LoginPage() {
             <path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/>
             <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
           </svg>
-          Google ile devam et
+          Continue with Google
         </button>
 
         <div className="flex items-center gap-3 mb-4">
           <div className="flex-1 h-px bg-gray-200" />
-          <span className="text-xs text-gray-400">veya</span>
+          <span className="text-xs text-gray-400">or</span>
           <div className="flex-1 h-px bg-gray-200" />
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">E-posta</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <input
               type="email"
               required
@@ -81,7 +81,7 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Şifre</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
             <input
               type="password"
               required
@@ -97,7 +97,7 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg text-sm transition disabled:opacity-50"
           >
-            {loading ? 'Giriş yapılıyor…' : 'Giriş Yap'}
+            {loading ? 'Signing in…' : 'Log in'}
           </button>
         </form>
       </div>

@@ -3,8 +3,8 @@ import { Header } from '@/components/layout/Header'
 import { Link2, Palette, ChevronRight } from 'lucide-react'
 
 const sections = [
-  { href: '/settings/accounts', label: 'Bağlı Hesaplar', desc: 'Reddit, Instagram, TikTok, YouTube bağlantıları', icon: Link2 },
-  { href: '/settings/brand', label: 'Marka Profili', desc: 'Ürün bilgisi, ton, hedef kitle', icon: Palette },
+  { href: '/settings/accounts', label: 'Connected accounts', desc: 'Reddit, Instagram, TikTok, YouTube', icon: Link2 },
+  { href: '/settings/brand', label: 'Brand profile', desc: 'Product, tone, target audience', icon: Palette },
 ]
 
 export default function SettingsPage() {

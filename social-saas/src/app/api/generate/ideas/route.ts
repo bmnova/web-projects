@@ -1,27 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { authUsageErrorResponse } from '@/lib/api-error-response'
 import { generateText } from '@/lib/ai/gemini'
 import type { BrandProfile, ContentAngle, Platform } from '@/types'
 
 const ANGLE_LABELS: Record<ContentAngle, string> = {
-  pain_point: 'Pain Point / Sorun çözümü',
-  feature: 'Özellik tanıtımı',
-  educational: 'Eğitici içerik',
-  comparison: 'Rakip karşılaştırma',
-  founder: 'Kurucu hikayesi',
-  launch: 'Lansman / Duyuru',
+  pain_point: 'Pain point / problem–solution',
+  feature: 'Feature highlight',
+  educational: 'Educational content',
+  comparison: 'Competitor comparison',
+  founder: 'Founder story',
+  launch: 'Launch / announcement',
 }
 
 export async function POST(req: NextRequest) {
   try {
     const { getAuthUid } = await import('@/lib/api-auth')
-    const { checkAndIncrementUsage } = await import('@/lib/firebase/usage')
-    const uid = await getAuthUid(req)
-    await checkAndIncrementUsage(uid)
+    await getAuthUid(req)
   } catch (err: unknown) {
-    const e = err as { message?: string; status?: number }
-    return NextResponse.json({ error: e.message ?? 'Unauthorized' }, { status: e.status ?? 401 })
+    return authUsageErrorResponse(err)
   }
 
+  // Ideas skip monthly quota (lightweight); quota applies to content / image / video routes.
   try {
     const { brandProfile, angle, platforms } = (await req.json()) as {
       brandProfile: BrandProfile

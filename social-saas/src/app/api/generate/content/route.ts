@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { authUsageErrorResponse } from '@/lib/api-error-response'
 import { generateText } from '@/lib/ai/gemini'
 import type { BrandProfile, Platform } from '@/types'
 
@@ -18,8 +19,7 @@ export async function POST(req: NextRequest) {
     const uid = await getAuthUid(req)
     await checkAndIncrementUsage(uid)
   } catch (err: unknown) {
-    const e = err as { message?: string; status?: number }
-    return NextResponse.json({ error: e.message ?? 'Unauthorized' }, { status: e.status ?? 401 })
+    return authUsageErrorResponse(err)
   }
 
   try {
@@ -52,8 +52,10 @@ Return ONLY valid JSON:
     const raw = await generateText(prompt)
     const match = raw.match(/\{[\s\S]*\}/)
     if (!match) return NextResponse.json({ error: 'Parse error' }, { status: 500 })
-    const result = JSON.parse(match[0])
-    return NextResponse.json(result)
+    const result = JSON.parse(match[0]) as { content?: unknown; notes?: unknown }
+    const content = typeof result.content === 'string' ? result.content : ''
+    const notes = typeof result.notes === 'string' ? result.notes : ''
+    return NextResponse.json({ content, notes })
   } catch (err) {
     console.error('generate/content error', err)
     return NextResponse.json({ error: 'Generation failed' }, { status: 500 })

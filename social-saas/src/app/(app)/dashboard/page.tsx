@@ -34,8 +34,8 @@ async function loadStats(uid: string): Promise<{ stats: Stats; workspaceId: stri
       where('status', 'in', ['queued', 'processing'])
     )),
     getCountFromServer(query(
-      collection(db, 'workspaces', wid, 'approvalTasks'),
-      where('status', '==', 'pending')
+      collection(db, 'workspaces', wid, 'assets'),
+      where('status', '==', 'pending_approval')
     )),
     getCountFromServer(query(
       collection(db, 'workspaces', wid, 'publishJobs'),
@@ -72,11 +72,11 @@ export default function DashboardPage() {
   }, [user])
 
   const widgets = [
-    { label: 'Bağlı Hesaplar',   value: stats.connected, icon: Link2,       color: 'bg-blue-50 text-blue-600',   href: '/settings/accounts' },
-    { label: 'Kuyrukta Bekleyen', value: stats.queued,    icon: Clock,       color: 'bg-yellow-50 text-yellow-600', href: '/calendar' },
-    { label: 'Onay Bekleyen',     value: stats.pending,   icon: CheckSquare, color: 'bg-orange-50 text-orange-600', href: '/approvals' },
-    { label: 'Son Yayınlanan',    value: stats.published, icon: Send,        color: 'bg-green-50 text-green-600',   href: '/calendar' },
-    { label: 'Reddit Fırsatı',    value: stats.leads,     icon: Search,      color: 'bg-purple-50 text-purple-600', href: '/research' },
+    { label: 'Connected accounts', value: stats.connected, icon: Link2,       color: 'bg-blue-50 text-blue-600',   href: '/settings/accounts' },
+    { label: 'In queue',           value: stats.queued,    icon: Clock,       color: 'bg-yellow-50 text-yellow-600', href: '/calendar' },
+    { label: 'Pending approval',   value: stats.pending,   icon: CheckSquare, color: 'bg-orange-50 text-orange-600', href: '/approvals' },
+    { label: 'Published',          value: stats.published, icon: Send,        color: 'bg-green-50 text-green-600',   href: '/calendar' },
+    { label: 'Reddit leads',       value: stats.leads,     icon: Search,      color: 'bg-purple-50 text-purple-600', href: '/research' },
   ]
 
   return (
@@ -110,15 +110,15 @@ export default function DashboardPage() {
                 <Sparkles className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-900">İçerik Üret</p>
-                <p className="text-xs text-gray-400">AI ile platform içerikleri oluştur</p>
+                <p className="text-sm font-semibold text-gray-900">Create content</p>
+                <p className="text-xs text-gray-400">Generate platform-ready copy with AI</p>
               </div>
             </div>
             <Link
               href="/studio"
               className="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 rounded-lg transition"
             >
-              Studio&apos;yu Aç
+              Open studio
             </Link>
           </div>
 
@@ -128,8 +128,8 @@ export default function DashboardPage() {
                 <Search className="w-5 h-5 text-purple-600" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-900">Reddit Araştır</p>
-                <p className="text-xs text-gray-400">Potansiyel müşterileri bul</p>
+                <p className="text-sm font-semibold text-gray-900">Reddit research</p>
+                <p className="text-xs text-gray-400">Surface leads and conversations</p>
               </div>
             </div>
             <Link
@@ -145,10 +145,10 @@ export default function DashboardPage() {
           <div className="mt-4 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
             <Link2 className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-amber-800">Henüz bağlı hesap yok</p>
+              <p className="text-sm font-medium text-amber-800">No connected accounts yet</p>
               <p className="text-xs text-amber-600 mt-0.5">
-                İçerikleri otomatik yayınlamak için{' '}
-                <Link href="/settings/accounts" className="underline font-medium">hesaplarını bağla</Link>.
+                Connect social accounts to publish automatically —{' '}
+                <Link href="/settings/accounts" className="underline font-medium">open settings</Link>.
               </p>
             </div>
           </div>

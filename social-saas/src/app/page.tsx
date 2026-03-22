@@ -4,25 +4,25 @@ import { Zap, Sparkles, CheckCircle, FileText, List, LayoutGrid, Video, ArrowRig
 const FEATURES = [
   {
     icon: Sparkles,
-    title: 'Format-First Studio',
-    desc: 'Post, Thread, Carousel, Script — her format için ayrı ayrı optimize edilmiş AI içerik üretimi.',
+    title: 'Format-first studio',
+    desc: 'Post, Thread, Carousel, and Script — AI output tuned for each format.',
   },
   {
     icon: Zap,
-    title: 'Platform-Özel İçerik',
-    desc: 'Reddit, X, Instagram, TikTok, YouTube Shorts — her platformun tonuna ve limitine uygun içerik.',
+    title: 'Platform-native copy',
+    desc: 'Reddit, X, Instagram, TikTok, YouTube Shorts — tone and limits per platform.',
   },
   {
     icon: CheckCircle,
-    title: 'Onay & Yayın Akışı',
-    desc: 'Üretilen içerikleri ekiple incele, onayla ve direkt ya da zamanlanmış olarak yayınla.',
+    title: 'Review & publish',
+    desc: 'Review with your team, approve, then publish directly or on a schedule.',
   },
 ]
 
 const FORMAT_EXAMPLES = [
   { icon: FileText, label: 'Post',     desc: 'Reddit, X, Instagram, YouTube' },
-  { icon: List,     label: 'Thread',   desc: 'Twitter/X thread serisi' },
-  { icon: LayoutGrid, label: 'Carousel', desc: 'Instagram slide içeriği' },
+  { icon: List,     label: 'Thread',   desc: 'Twitter / X threads' },
+  { icon: LayoutGrid, label: 'Carousel', desc: 'Instagram carousels' },
   { icon: Video,    label: 'Script',   desc: 'TikTok & YouTube Shorts' },
 ]
 
@@ -31,32 +31,32 @@ const PLANS = [
     name: 'Free',
     price: '$0',
     period: '',
-    desc: 'Başlamak için',
-    limit: '15 üretim/ay',
-    features: ['1 workspace', 'Tüm formatlar', 'Temel platformlar'],
-    cta: 'Ücretsiz Başla',
+    desc: 'To get started',
+    limit: '15 generations / month',
+    features: ['1 workspace', 'All formats', 'Core platforms'],
+    cta: 'Start free',
     href: '/signup',
     highlight: false,
   },
   {
     name: 'Starter',
     price: '$19',
-    period: '/ay',
-    desc: 'Solo founder için',
-    limit: '150 üretim/ay',
-    features: ['1 workspace', 'Tüm formatlar & platformlar', 'Onay akışı', 'Scheduler'],
-    cta: 'Starter Başla',
+    period: '/mo',
+    desc: 'For solo founders',
+    limit: '150 generations / month',
+    features: ['1 workspace', 'All formats & platforms', 'Approvals', 'Scheduler'],
+    cta: 'Choose Starter',
     href: '/signup?plan=starter',
     highlight: true,
   },
   {
     name: 'Pro',
     price: '$49',
-    period: '/ay',
-    desc: 'Büyüyen startup için',
-    limit: 'Sınırsız üretim',
-    features: ['3 workspace', 'Takım üyeleri', 'Onay + Scheduler', 'Analitik', 'Öncelikli destek'],
-    cta: 'Pro Başla',
+    period: '/mo',
+    desc: 'For growing teams',
+    limit: 'Unlimited generations',
+    features: ['3 workspaces', 'Team seats', 'Approvals + scheduler', 'Analytics', 'Priority support'],
+    cta: 'Choose Pro',
     href: '/signup?plan=pro',
     highlight: false,
   },
@@ -76,13 +76,13 @@ export default function LandingPage() {
         </div>
         <div className="flex items-center gap-3">
           <Link href="/login" className="text-sm text-gray-600 hover:text-gray-900 font-medium transition">
-            Giriş Yap
+            Log in
           </Link>
           <Link
             href="/signup"
             className="text-sm bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition"
           >
-            Ücretsiz Başla
+            Start free
           </Link>
         </div>
       </nav>
@@ -91,27 +91,27 @@ export default function LandingPage() {
       <section className="px-6 py-20 max-w-4xl mx-auto text-center">
         <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-6">
           <Sparkles className="w-3.5 h-3.5" />
-          AI ile içerik üretimi — dakikalar içinde
+          AI content in minutes
         </div>
         <h1 className="text-5xl font-extrabold text-gray-900 leading-tight mb-6">
-          Startup&apos;ın için sosyal medya içeriklerini{' '}
-          <span className="text-blue-600">otomatik üret</span>
+          Generate on-brand social content{' '}
+          <span className="text-blue-600">for your startup</span>
         </h1>
         <p className="text-xl text-gray-500 mb-10 max-w-2xl mx-auto">
-          Thread, carousel, video script, Reddit post — her platform için optimize edilmiş, markanın sesine uygun içerikler.
+          Threads, carousels, video scripts, Reddit posts — optimized per platform and aligned with your voice.
         </p>
         <div className="flex items-center justify-center gap-4 flex-wrap">
           <Link
             href="/signup"
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl transition text-sm"
           >
-            Ücretsiz Başla <ArrowRight className="w-4 h-4" />
+            Start free <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
             href="/login"
             className="text-sm text-gray-500 hover:text-gray-900 font-medium transition"
           >
-            Hesabın var mı? Giriş yap
+            Already have an account? Log in
           </Link>
         </div>
 
@@ -136,7 +136,7 @@ export default function LandingPage() {
       <section className="px-6 py-16 bg-gray-50">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-2xl font-bold text-gray-900 text-center mb-10">
-            Neden SocialSaaS?
+            Why SocialSaaS?
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {FEATURES.map(f => {
@@ -157,12 +157,12 @@ export default function LandingPage() {
 
       {/* How it works */}
       <section className="px-6 py-16 max-w-4xl mx-auto">
-        <h2 className="text-2xl font-bold text-gray-900 text-center mb-10">Nasıl Çalışır?</h2>
+        <h2 className="text-2xl font-bold text-gray-900 text-center mb-10">How it works</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
-            { step: '1', title: 'Markayı Tanıt', desc: 'Ürün adı, hedef kitle ve ton bilgisini 2 dakikada gir.' },
-            { step: '2', title: 'Format & Açı Seç', desc: 'Post, Thread, Carousel veya Script — hangi açıdan anlatmak istediğini seç.' },
-            { step: '3', title: 'Üret & Yayınla', desc: 'AI içeriği üretir. Düzenle, onayla ve doğrudan yayınla.' },
+            { step: '1', title: 'Set up your brand', desc: 'Add product name, audience, and tone in about two minutes.' },
+            { step: '2', title: 'Pick format & angle', desc: 'Choose Post, Thread, Carousel, or Script and the story you want to tell.' },
+            { step: '3', title: 'Generate & ship', desc: 'AI drafts copy. Edit, approve, and publish when you are ready.' },
           ].map(item => (
             <div key={item.step} className="text-center">
               <div className="w-10 h-10 bg-blue-600 text-white rounded-full font-bold text-lg flex items-center justify-center mx-auto mb-4">
@@ -178,8 +178,8 @@ export default function LandingPage() {
       {/* Pricing */}
       <section className="px-6 py-16 bg-gray-50" id="pricing">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl font-bold text-gray-900 text-center mb-2">Fiyatlandırma</h2>
-          <p className="text-gray-500 text-sm text-center mb-10">Kredi kartı gerekmez. İstediğin zaman iptal et.</p>
+          <h2 className="text-2xl font-bold text-gray-900 text-center mb-2">Pricing</h2>
+          <p className="text-gray-500 text-sm text-center mb-10">No credit card required. Cancel anytime.</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {PLANS.map(plan => (
               <div
@@ -192,7 +192,7 @@ export default function LandingPage() {
               >
                 {plan.highlight && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
-                    En Popüler
+                    Most popular
                   </div>
                 )}
                 <div className="mb-4">
@@ -242,7 +242,7 @@ export default function LandingPage() {
             </div>
             <span className="text-sm font-semibold text-gray-700">SocialSaaS</span>
           </div>
-          <p className="text-xs text-gray-400">© 2026 SocialSaaS. Tüm hakları saklıdır.</p>
+          <p className="text-xs text-gray-400">© 2026 SocialSaaS. All rights reserved.</p>
         </div>
       </footer>
     </div>

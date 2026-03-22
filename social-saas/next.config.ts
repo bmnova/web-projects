@@ -1,8 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Firebase Auth signInWithPopup, Google OAuth popup'ının opener ile iletişim kurabilmesi için
-  // (aksi halde "Cross-Origin-Opener-Policy would block the window.closed call")
+  serverExternalPackages: ["ffmpeg-static"],
+  // Allow Firebase Auth signInWithPopup / Google OAuth to talk to the opener
+  // (otherwise COOP can block window.closed)
   async headers() {
     return [
       {
