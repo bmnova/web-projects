@@ -1,13 +1,20 @@
 import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai";
 
-if (!process.env.GEMINI_API_KEY) {
-  throw new Error("GEMINI_API_KEY environment variable is not set");
+let genAI: GoogleGenerativeAI | null = null;
+
+function getGenAI(): GoogleGenerativeAI {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) {
+    throw new Error("GEMINI_API_KEY environment variable is not set");
+  }
+  if (!genAI) {
+    genAI = new GoogleGenerativeAI(key);
+  }
+  return genAI;
 }
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
 export function getModel(modelName = "gemini-1.5-flash"): GenerativeModel {
-  return genAI.getGenerativeModel({ model: modelName });
+  return getGenAI().getGenerativeModel({ model: modelName });
 }
 
 export async function generateText(prompt: string, modelName = "gemini-1.5-flash"): Promise<string> {
