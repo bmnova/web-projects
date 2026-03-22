@@ -99,7 +99,7 @@ export default function OnboardingPage() {
               autoFocus
               value={workspaceName}
               onChange={e => setWorkspaceName(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 rounded-lg bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Örn: Acme Corp"
             />
           </>
@@ -115,7 +115,7 @@ export default function OnboardingPage() {
                 <input
                   value={productName}
                   onChange={e => setProductName(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-lg bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Örn: Acme SaaS"
                 />
               </div>
@@ -125,7 +125,7 @@ export default function OnboardingPage() {
                   rows={3}
                   value={productDesc}
                   onChange={e => setProductDesc(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full border border-gray-300 rounded-lg bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                   placeholder="Startupların sosyal medya içeriklerini otomatik oluşturup yayınlamasına yardımcı olan bir SaaS ürünü."
                 />
               </div>
@@ -135,7 +135,7 @@ export default function OnboardingPage() {
                   type="url"
                   value={website}
                   onChange={e => setWebsite(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-lg bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="https://acme.com"
                 />
               </div>
@@ -154,7 +154,7 @@ export default function OnboardingPage() {
                   rows={2}
                   value={targetAudience}
                   onChange={e => setTargetAudience(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full border border-gray-300 rounded-lg bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                   placeholder="Erken aşama startup kurucuları, B2B SaaS girişimcileri"
                 />
               </div>
@@ -180,7 +180,7 @@ export default function OnboardingPage() {
                 <input
                   value={ctaStyle}
                   onChange={e => setCtaStyle(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-lg bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Örn: Ücretsiz dene, Demo iste"
                 />
               </div>

@@ -607,7 +607,7 @@ export default function StudioPage() {
                               <div className="bg-blue-600 rounded-lg p-4 text-white">
                                 <p className="text-xs font-semibold uppercase tracking-wide mb-1 opacity-60">Cover</p>
                                 <input
-                                  className="w-full bg-transparent font-bold text-base focus:outline-none placeholder-white/50"
+                                  className="w-full bg-transparent font-bold text-base text-white placeholder:text-white/50 focus:outline-none"
                                   value={entry.cover}
                                   onChange={e => updateCarouselCover(key, e.target.value)}
                                 />
@@ -634,7 +634,7 @@ export default function StudioPage() {
                               <div className="bg-gray-900 rounded-lg p-4 text-white">
                                 <p className="text-xs font-semibold uppercase tracking-wide mb-1 opacity-60">CTA</p>
                                 <input
-                                  className="w-full bg-transparent text-sm focus:outline-none"
+                                  className="w-full bg-transparent text-sm text-white placeholder:text-white/50 focus:outline-none"
                                   value={entry.cta}
                                   onChange={e => updateCarouselCta(key, e.target.value)}
                                 />
