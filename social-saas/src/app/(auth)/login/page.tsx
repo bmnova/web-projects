@@ -33,8 +33,8 @@ export default function LoginPage() {
     try {
       await signInWithGoogle()
       router.push('/dashboard')
-    } catch {
-      setError('Google ile giriş başarısız.')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Google ile giriş başarısız.')
     } finally {
       setLoading(false)
     }

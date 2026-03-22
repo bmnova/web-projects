@@ -38,8 +38,8 @@ export default function SignupPage() {
     try {
       await signInWithGoogle()
       router.push('/onboarding')
-    } catch {
-      setError('Google ile kayıt başarısız.')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Google ile kayıt başarısız.')
     } finally {
       setLoading(false)
     }
