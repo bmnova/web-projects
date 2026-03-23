@@ -73,13 +73,9 @@ export async function POST(req: NextRequest) {
     }
 
     // ── 3. CTA card (static image rendered as short video clip) ───────────
-    // Generate a 3-second black card with the CTA text using ffmpeg lavfi.
-    // The text overlay is burned in via drawtext filter.
+    // PNG frame generated via sharp+SVG (no drawtext/libfreetype required).
     const ctaPath = join(workDir, 'cta.mp4')
-    const safeCta = cta.replace(/'/g, "\\'").replace(/:/g, '\\:').replace(/\[/g, '\\[').replace(/\]/g, '\\]')
-    const safeProduct = brandProfile.productName.replace(/'/g, "\\'").replace(/:/g, '\\:').replace(/\[/g, '\\[').replace(/\]/g, '\\]')
-
-    await generateCtaClip(ctaPath, safeCta, safeProduct)
+    await generateCtaClip(ctaPath, cta, brandProfile.productName)
     segments.push(ctaPath)
 
     // ── 4. Concatenate all segments ────────────────────────────────────────
@@ -97,23 +93,70 @@ export async function POST(req: NextRequest) {
   }
 }
 
+/** Wrap plain text into lines that fit within `maxChars` characters. */
+function wrapText(text: string, maxChars: number): string[] {
+  const words = text.split(' ')
+  const lines: string[] = []
+  let current = ''
+  for (const word of words) {
+    const candidate = current ? `${current} ${word}` : word
+    if (candidate.length > maxChars && current) {
+      lines.push(current)
+      current = word
+    } else {
+      current = candidate
+    }
+  }
+  if (current) lines.push(current)
+  return lines
+}
+
 async function generateCtaClip(outPath: string, ctaText: string, productName: string): Promise<void> {
   const { spawn } = await import('child_process')
+  const { writeFile: wf } = await import('fs/promises')
+  const { join: pjoin } = await import('path')
+  const { dirname } = await import('path')
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const ffmpegPath = (process.env.FFMPEG_BIN?.trim() || require('ffmpeg-static')) as string
 
-  const fontsize = 52
-  const subfontsize = 30
-  const filterComplex = [
-    `color=c=0x0a0a0a:s=720x1280:r=30[bg]`,
-    `[bg]drawtext=text='${ctaText}':fontcolor=white:fontsize=${fontsize}:x=(w-text_w)/2:y=(h-text_h)/2-40:line_spacing=10:expansion=none[t1]`,
-    `[t1]drawtext=text='— ${productName}':fontcolor=0xaaaaaa:fontsize=${subfontsize}:x=(w-text_w)/2:y=(h-text_h)/2+${fontsize + 20}:expansion=none[out]`,
-  ].join(';')
+  // ── 1. Render CTA frame as PNG via sharp + SVG ──────────────────────────
+  // This avoids the drawtext filter (requires libfreetype) entirely.
+  const W = 720, H = 1280
+  const lines = wrapText(ctaText, 22)
+  const lineHeight = 62
+  const totalTextH = lines.length * lineHeight
+  const startY = (H - totalTextH) / 2 - 40
 
+  const textRows = lines
+    .map((line, i) => {
+      const y = startY + i * lineHeight + lineHeight * 0.75
+      const escaped = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      return `<text x="50%" y="${y}" font-family="sans-serif" font-size="52" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="auto">${escaped}</text>`
+    })
+    .join('\n')
+
+  const subY = startY + totalTextH + 40 + 30 * 0.75
+  const safeProd = productName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
+  <rect width="${W}" height="${H}" fill="#0a0a0a"/>
+  ${textRows}
+  <text x="50%" y="${subY}" font-family="sans-serif" font-size="30" fill="#aaaaaa" text-anchor="middle" dominant-baseline="auto">— ${safeProd}</text>
+</svg>`
+
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const sharp = require('sharp') as typeof import('sharp')
+  const pngBuf = await sharp(Buffer.from(svg)).png().toBuffer()
+
+  const pngPath = pjoin(dirname(outPath), 'cta_frame.png')
+  await wf(pngPath, pngBuf)
+
+  // ── 2. Loop the PNG into a 3-second H.264 clip ─────────────────────────
+  // Only requires libx264 — no drawtext / libfreetype needed.
   await new Promise<void>((resolve, reject) => {
     const p = spawn(ffmpegPath, [
-      '-f', 'lavfi',
-      '-i', filterComplex,
+      '-loop', '1',
+      '-i', pngPath,
       '-t', '3',
       '-c:v', 'libx264',
       '-preset', 'ultrafast',
