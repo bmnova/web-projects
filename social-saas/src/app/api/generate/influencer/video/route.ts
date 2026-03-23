@@ -12,6 +12,8 @@ import type { StoryPersona } from '../stories/route'
 export const runtime = 'nodejs'
 export const maxDuration = 300
 
+type Mode = 'full' | 'reaction' | 'cta' | 'merge'
+
 export async function POST(req: NextRequest) {
   try {
     const { getAuthUid } = await import('@/lib/api-auth')
@@ -27,65 +29,99 @@ export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as {
       brandProfile: BrandProfile
-      story: StoryPersona
-      demoVideoBase64?: string  // base64 MP4 of the app demo, if user uploaded
-      cta: string
+      story?: StoryPersona
+      demoVideoBase64?: string
+      cta?: string
+      mode?: Mode
+      // for merge mode: pre-generated segment base64s
+      reactionBase64?: string
+      ctaBase64?: string
     }
 
-    if (!body.brandProfile || !body.story || !body.cta) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    if (!body.brandProfile) {
+      return NextResponse.json({ error: 'Missing brandProfile' }, { status: 400 })
     }
 
-    const { story, brandProfile, cta } = body
-
-    // ── 1. Generate reaction clip via Veo ──────────────────────────────────
-    // Persona-specific reaction video: the influencer reacts to the story hook.
-    // Future: replace with Nano Banana Pro character generation.
-    const reactionPrompt = [
-      `${story.reactionDesc}.`,
-      `Vertical 9:16 format, close-up on face, natural ambient light, authentic UGC style,`,
-      `smartphone selfie aesthetic. No text overlays. Genuine candid reaction.`,
-      `The person is ${story.persona}.`,
-    ].join(' ')
-
-    const { base64: reactionBase64, mimeType } = await generateVeoMp4Base64(
-      reactionPrompt,
-      '9:16',
-      undefined,
-      { durationSeconds: 6 }
-    )
+    const mode: Mode = body.mode ?? 'full'
+    const { brandProfile } = body
 
     const workDir = join(tmpdir(), `ugc-${randomUUID()}`)
     await mkdir(workDir, { recursive: true })
 
-    const segments: string[] = []
+    try {
+      // ── Reaction clip ────────────────────────────────────────────────────
+      let reactionBase64 = body.reactionBase64 ?? ''
+      let reactionMimeType = 'video/mp4'
 
-    // Write reaction clip
-    const reactionPath = join(workDir, 'reaction.mp4')
-    await writeFile(reactionPath, Buffer.from(reactionBase64, 'base64'))
-    segments.push(reactionPath)
+      if (mode === 'full' || mode === 'reaction') {
+        if (!body.story) return NextResponse.json({ error: 'Missing story' }, { status: 400 })
+        const { story } = body
+        const reactionPrompt = [
+          `${story.reactionDesc}.`,
+          `Vertical 9:16 format, close-up on face, natural ambient light, authentic UGC style,`,
+          `smartphone selfie aesthetic. No text overlays. Genuine candid reaction.`,
+          `The person is ${story.persona}.`,
+        ].join(' ')
+        const result = await generateVeoMp4Base64(reactionPrompt, '9:16', undefined, { durationSeconds: 6 })
+        reactionBase64 = result.base64
+        reactionMimeType = result.mimeType
+        if (mode === 'reaction') {
+          return NextResponse.json({ reactionBase64, reactionMimeType })
+        }
+      }
 
-    // ── 2. App demo clip ───────────────────────────────────────────────────
-    if (body.demoVideoBase64) {
-      const demoPath = join(workDir, 'demo.mp4')
-      await writeFile(demoPath, Buffer.from(body.demoVideoBase64, 'base64'))
-      segments.push(demoPath)
+      // ── CTA clip ─────────────────────────────────────────────────────────
+      let ctaBase64 = body.ctaBase64 ?? ''
+
+      if (mode === 'full' || mode === 'cta') {
+        if (!body.cta) return NextResponse.json({ error: 'Missing cta' }, { status: 400 })
+        const ctaPath = join(workDir, 'cta.mp4')
+        await generateCtaClip(ctaPath, body.cta, brandProfile.productName)
+        ctaBase64 = (await readFile(ctaPath)).toString('base64')
+        if (mode === 'cta') {
+          return NextResponse.json({ ctaBase64, ctaMimeType: 'video/mp4' })
+        }
+      }
+
+      // ── Merge segments ────────────────────────────────────────────────────
+      const segments: string[] = []
+
+      // reaction
+      const reactionPath = join(workDir, 'reaction.mp4')
+      await writeFile(reactionPath, Buffer.from(reactionBase64, 'base64'))
+      segments.push(reactionPath)
+
+      // demo (optional)
+      let demoBase64 = body.demoVideoBase64
+      if (demoBase64) {
+        const demoPath = join(workDir, 'demo.mp4')
+        await writeFile(demoPath, Buffer.from(demoBase64, 'base64'))
+        segments.push(demoPath)
+      }
+
+      // cta
+      const ctaPath = join(workDir, 'cta_final.mp4')
+      await writeFile(ctaPath, Buffer.from(ctaBase64, 'base64'))
+      segments.push(ctaPath)
+
+      const { concatMp4NormalizedStraightConcat } = await import('@/lib/video/concat-mp4')
+      const finalBuf = await concatMp4NormalizedStraightConcat(segments)
+      const finalBase64 = finalBuf.toString('base64')
+
+      return NextResponse.json({
+        // individual segments (so UI can show them)
+        reactionBase64,
+        reactionMimeType,
+        ...(demoBase64 ? { demoBase64, demoMimeType: 'video/mp4' } : {}),
+        ctaBase64,
+        ctaMimeType: 'video/mp4',
+        // merged
+        base64: finalBase64,
+        mimeType: 'video/mp4',
+      })
+    } finally {
+      await rm(workDir, { recursive: true, force: true })
     }
-
-    // ── 3. CTA card (static image rendered as short video clip) ───────────
-    // PNG frame generated via sharp+SVG (no drawtext/libfreetype required).
-    const ctaPath = join(workDir, 'cta.mp4')
-    await generateCtaClip(ctaPath, cta, brandProfile.productName)
-    segments.push(ctaPath)
-
-    // ── 4. Concatenate all segments ────────────────────────────────────────
-    const { concatMp4NormalizedStraightConcat } = await import('@/lib/video/concat-mp4')
-    const finalBuf = await concatMp4NormalizedStraightConcat(segments)
-
-    await rm(workDir, { recursive: true, force: true })
-
-    const finalBase64 = finalBuf.toString('base64')
-    return NextResponse.json({ base64: finalBase64, mimeType: mimeType || 'video/mp4' })
   } catch (err) {
     console.error('influencer/video error', err)
     const message = err instanceof Error ? err.message : 'Video generation failed'
@@ -120,7 +156,6 @@ async function generateCtaClip(outPath: string, ctaText: string, productName: st
   const ffmpegPath = (process.env.FFMPEG_BIN?.trim() || require('ffmpeg-static')) as string
 
   // ── 1. Render CTA frame as PNG via sharp + SVG ──────────────────────────
-  // This avoids the drawtext filter (requires libfreetype) entirely.
   const W = 720, H = 1280
   const lines = wrapText(ctaText, 22)
   const lineHeight = 62
@@ -152,7 +187,6 @@ async function generateCtaClip(outPath: string, ctaText: string, productName: st
   await wf(pngPath, pngBuf)
 
   // ── 2. Loop the PNG into a 3-second H.264 clip ─────────────────────────
-  // Only requires libx264 — no drawtext / libfreetype needed.
   await new Promise<void>((resolve, reject) => {
     const p = spawn(ffmpegPath, [
       '-loop', '1',
