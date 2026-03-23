@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/firebase/auth-context'
 import { Header } from '@/components/layout/Header'
 import {
@@ -68,43 +67,6 @@ function fileToBase64(file: File): Promise<string> {
     reader.onerror = reject
     reader.readAsDataURL(file)
   })
-}
-
-// ── Studio Tab Bar ─────────────────────────────────────────────────────────────
-
-function StudioTabBar() {
-  const pathname = usePathname()
-  return (
-    <div className="border-b border-gray-200 bg-white px-6">
-      <div className="flex max-w-4xl mx-auto">
-        <Link
-          href="/studio"
-          className={cn(
-            'px-4 py-3 text-sm font-medium border-b-2 -mb-px transition-colors',
-            pathname === '/studio'
-              ? 'border-blue-600 text-blue-700'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
-          )}
-        >
-          Content Studio
-        </Link>
-        <Link
-          href="/studio/influencers"
-          className={cn(
-            'px-4 py-3 text-sm font-medium border-b-2 -mb-px transition-colors',
-            pathname.startsWith('/studio/influencers')
-              ? 'border-blue-600 text-blue-700'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
-          )}
-        >
-          AI Influencers
-          <span className="ml-2 px-1.5 py-0.5 text-[10px] font-semibold bg-violet-100 text-violet-700 rounded-full">
-            NEW
-          </span>
-        </Link>
-      </div>
-    </div>
-  )
 }
 
 // ── Step Indicator ────────────────────────────────────────────────────────────
@@ -349,7 +311,6 @@ export default function AiInfluencersPage() {
     return (
       <>
         <Header title="AI Influencers" />
-        <StudioTabBar />
         <main className="flex-1 flex items-center justify-center p-6">
           <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
         </main>
@@ -361,7 +322,6 @@ export default function AiInfluencersPage() {
     return (
       <>
         <Header title="AI Influencers" />
-        <StudioTabBar />
         <main className="flex-1 p-6 max-w-4xl mx-auto w-full">
           <div className="rounded-xl border border-gray-200 bg-white p-8 text-center">
             <p className="text-gray-500 text-sm mb-3">No brand profile found.</p>
@@ -379,7 +339,6 @@ export default function AiInfluencersPage() {
   return (
     <>
       <Header title="AI Influencers" />
-      <StudioTabBar />
       <main className="flex-1 p-6 max-w-4xl mx-auto w-full">
 
         {/* Quota banner */}
