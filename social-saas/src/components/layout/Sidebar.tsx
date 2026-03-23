@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Search,
   Layers,
+  Users,
   CheckSquare,
   CalendarDays,
   Settings,
@@ -18,6 +19,7 @@ const nav = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/research', label: 'Research Inbox', icon: Search },
   { href: '/studio', label: 'Content Studio', icon: Layers },
+  { href: '/studio/influencers', label: 'AI Influencers', icon: Users },
   { href: '/approvals', label: 'Approvals', icon: CheckSquare },
   { href: '/calendar', label: 'Calendar', icon: CalendarDays },
 ]
@@ -38,7 +40,7 @@ export function Sidebar() {
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5">
         {nav.map(({ href, label, icon: Icon }) => {
-          const active = pathname === href || pathname.startsWith(href + '/')
+          const active = pathname === href || (href !== '/studio' && pathname.startsWith(href + '/'))
           return (
             <Link
               key={href}
