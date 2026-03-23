@@ -57,10 +57,11 @@ export async function POST(req: NextRequest) {
         if (!body.story) return NextResponse.json({ error: 'Missing story' }, { status: 400 })
         const { story } = body
         const reactionPrompt = [
-          `${story.reactionDesc}.`,
-          `Vertical 9:16 format, close-up on face, natural ambient light, authentic UGC style,`,
-          `smartphone selfie aesthetic. No text overlays. Genuine candid reaction.`,
-          `The person is ${story.persona}.`,
+          `Handheld selfie shot, slight natural camera shake, close-up face framing.`,
+          `${story.reactionDesc}`,
+          `Shot on smartphone front camera, soft natural window light or ring light visible in background.`,
+          `Authentic TikTok UGC aesthetic — unfiltered skin texture, relatable and genuine.`,
+          `Vibrant and emotionally expressive. No graphics or text on screen.`,
         ].join(' ')
         const result = await generateVeoMp4Base64(reactionPrompt, '9:16', undefined, { durationSeconds: 6 })
         reactionBase64 = result.base64
