@@ -42,7 +42,14 @@ Create 3 viral UGC video concepts. Each concept has:
    Style examples: "My partner would break up with me if they knew I did this.", "I can't believe I wasted 2 years before finding this.", "My boss still doesn't know I use this every day."
 2. A persona (specific: nationality, age, gender — e.g. "Spanish, 23yo, female")
 3. The primary emotion the persona shows (one word: laughing, shocked, excited, guilty, proud, amazed)
-4. A brief reaction description for video generation (e.g. "laughing woman covering mouth in delighted disbelief, looking at phone")
+4. A cinematic reaction description for Veo video generation (3-4 sentences). Must include:
+   - Camera: always start with "Handheld selfie shot, slight natural camera shake" or similar
+   - Subject: visual description matching the persona (age range, style hint, one clothing detail)
+   - Action arc: describe how the emotion builds over time — starts neutral/calm, then the reaction grows, then holds
+   - Setting: a real UGC location (e.g. cozy bedroom, bathroom mirror, kitchen, office desk, living room couch)
+   - Lighting: natural window light, soft ring light visible, or warm morning light
+   - End with: "Authentic and unposed, not staged."
+   Example: "Handheld selfie shot, slight natural camera shake. A mid-20s Latina woman in a casual oversized hoodie films herself with her phone in a cozy bedroom. She is initially scrolling with a neutral expression — then her eyebrows slowly raise, her eyes go wide, and she raises her hand to cover her mouth as if in disbelief, holding that expression. Soft natural window light from the side. Authentic and unposed, not staged."
 
 The stories must feel authentic, relatable, and tied to the app's value.
 
