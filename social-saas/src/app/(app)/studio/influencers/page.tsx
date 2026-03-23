@@ -69,6 +69,59 @@ function fileToBase64(file: File): Promise<string> {
   })
 }
 
+// ── Segment Card ──────────────────────────────────────────────────────────────
+
+const COLOR_CLASSES: Record<string, { badge: string }> = {
+  violet: { badge: 'bg-violet-100 text-violet-700' },
+  green:  { badge: 'bg-green-100 text-green-700' },
+  orange: { badge: 'bg-orange-100 text-orange-700' },
+}
+
+function SegmentCard({
+  label, color, dataUrl, regenerating, regenDisabled, onRegenerate, onReupload,
+}: {
+  label: string
+  color: string
+  dataUrl: string
+  regenerating?: boolean
+  regenDisabled?: boolean
+  onRegenerate?: () => void
+  onReupload?: () => void
+}) {
+  const { badge } = COLOR_CLASSES[color] ?? COLOR_CLASSES.violet
+  return (
+    <div className="rounded-xl border border-gray-200 overflow-hidden bg-white">
+      <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+        <span className={cn('text-xs font-semibold px-2 py-0.5 rounded-full', badge)}>{label}</span>
+        <div className="flex items-center gap-2">
+          {onRegenerate && (
+            <button
+              onClick={onRegenerate}
+              disabled={regenDisabled}
+              className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 disabled:opacity-40 transition"
+            >
+              {regenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+              {regenerating ? 'Regenerating…' : 'Regenerate'}
+            </button>
+          )}
+          {onReupload && (
+            <button
+              onClick={onReupload}
+              className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition"
+            >
+              <Upload className="w-3.5 h-3.5" />
+              Re-upload
+            </button>
+          )}
+        </div>
+      </div>
+      <div className="bg-black">
+        <video src={dataUrl} controls loop className="w-full max-h-[320px] object-contain" />
+      </div>
+    </div>
+  )
+}
+
 // ── Step Indicator ────────────────────────────────────────────────────────────
 
 function StepIndicator({ current }: { current: Step }) {
@@ -149,6 +202,11 @@ export default function AiInfluencersPage() {
   const [generating, setGenerating] = useState(false)
   const [genError, setGenError] = useState('')
   const [finalVideoDataUrl, setFinalVideoDataUrl] = useState('')
+  // Individual segments
+  const [reactionDataUrl, setReactionDataUrl] = useState('')
+  const [demoSegmentDataUrl, setDemoSegmentDataUrl] = useState('')
+  const [ctaDataUrl, setCtaDataUrl] = useState('')
+  const [regenTarget, setRegenTarget] = useState<'reaction' | 'cta' | null>(null)
 
   // Quota
   const [aiQuotaBlocked, setAiQuotaBlocked] = useState(false)
@@ -275,12 +333,13 @@ export default function AiInfluencersPage() {
     setGenerating(true)
     setGenError('')
     setFinalVideoDataUrl('')
+    setReactionDataUrl('')
+    setDemoSegmentDataUrl('')
+    setCtaDataUrl('')
     try {
       const token = await getToken()
       let demoVideoBase64: string | undefined
-      if (demoFile) {
-        demoVideoBase64 = await fileToBase64(demoFile)
-      }
+      if (demoFile) demoVideoBase64 = await fileToBase64(demoFile)
 
       const res = await fetch('/api/generate/influencer/video', {
         method: 'POST',
@@ -290,6 +349,74 @@ export default function AiInfluencersPage() {
       const data = await res.json()
       if (isAiQuotaExceededResponse(res, data)) { setAiQuotaBlocked(true); return }
       if (!res.ok) { setGenError(data.error || 'Generation failed'); return }
+
+      setReactionDataUrl(`data:${data.reactionMimeType || 'video/mp4'};base64,${data.reactionBase64}`)
+      if (data.demoBase64) setDemoSegmentDataUrl(`data:video/mp4;base64,${data.demoBase64}`)
+      setCtaDataUrl(`data:video/mp4;base64,${data.ctaBase64}`)
+      setFinalVideoDataUrl(`data:${data.mimeType || 'video/mp4'};base64,${data.base64}`)
+    } catch {
+      setGenError('Request failed. Please try again.')
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  async function handleRegenSegment(segment: 'reaction' | 'cta') {
+    if (!brandProfile || !selectedStory) return
+    const cta = customCta.trim() || selectedCta
+    if (segment === 'cta' && !cta) return
+
+    setRegenTarget(segment)
+    setGenError('')
+    setFinalVideoDataUrl('') // merged is now stale
+    try {
+      const token = await getToken()
+      const body = segment === 'reaction'
+        ? { brandProfile, story: selectedStory, mode: 'reaction' }
+        : { brandProfile, cta, mode: 'cta' }
+
+      const res = await fetch('/api/generate/influencer/video', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(body),
+      })
+      const data = await res.json()
+      if (isAiQuotaExceededResponse(res, data)) { setAiQuotaBlocked(true); return }
+      if (!res.ok) { setGenError(data.error || 'Regeneration failed'); return }
+
+      if (segment === 'reaction') {
+        setReactionDataUrl(`data:${data.reactionMimeType || 'video/mp4'};base64,${data.reactionBase64}`)
+      } else {
+        setCtaDataUrl(`data:video/mp4;base64,${data.ctaBase64}`)
+      }
+    } catch {
+      setGenError('Request failed. Please try again.')
+    } finally {
+      setRegenTarget(null)
+    }
+  }
+
+  async function handleMerge() {
+    if (!brandProfile || !reactionDataUrl || !ctaDataUrl) return
+    setGenerating(true)
+    setGenError('')
+    try {
+      const token = await getToken()
+      const toBase64 = (dataUrl: string) => dataUrl.split(';base64,')[1] ?? ''
+      const res = await fetch('/api/generate/influencer/video', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          brandProfile,
+          mode: 'merge',
+          reactionBase64: toBase64(reactionDataUrl),
+          ...(demoSegmentDataUrl ? { demoVideoBase64: toBase64(demoSegmentDataUrl) } : {}),
+          ctaBase64: toBase64(ctaDataUrl),
+          cta: customCta.trim() || selectedCta, // needed for ctaBase64 passthrough
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setGenError(data.error || 'Merge failed'); return }
       setFinalVideoDataUrl(`data:${data.mimeType || 'video/mp4'};base64,${data.base64}`)
     } catch {
       setGenError('Request failed. Please try again.')
@@ -785,78 +912,131 @@ export default function AiInfluencersPage() {
               <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded font-medium">CTA card</span>
             </div>
 
-            {!finalVideoDataUrl ? (
-              <>
-                {genError && (
-                  <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                    {genError}
+            {genError && (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {genError}
+              </div>
+            )}
+
+            {/* ── Segment cards (shown after first generation) ── */}
+            {reactionDataUrl && (
+              <div className="space-y-3">
+                {/* Reaction clip */}
+                <SegmentCard
+                  label="Reaction Clip"
+                  color="violet"
+                  dataUrl={reactionDataUrl}
+                  regenerating={regenTarget === 'reaction'}
+                  onRegenerate={() => handleRegenSegment('reaction')}
+                  regenDisabled={!!regenTarget || aiQuotaBlocked}
+                />
+
+                {/* Demo clip (user-uploaded — show for context, no regen) */}
+                {demoSegmentDataUrl && (
+                  <SegmentCard
+                    label="App Demo"
+                    color="green"
+                    dataUrl={demoSegmentDataUrl}
+                    onReupload={() => setStep('demo')}
+                  />
+                )}
+
+                {/* CTA card */}
+                {ctaDataUrl && (
+                  <SegmentCard
+                    label="CTA Card"
+                    color="orange"
+                    dataUrl={ctaDataUrl}
+                    regenerating={regenTarget === 'cta'}
+                    onRegenerate={() => handleRegenSegment('cta')}
+                    regenDisabled={!!regenTarget || aiQuotaBlocked}
+                  />
+                )}
+
+                {/* Merged video */}
+                {finalVideoDataUrl && (
+                  <div className="rounded-xl border border-gray-200 overflow-hidden bg-black">
+                    <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+                      <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Merged Video</span>
+                    </div>
+                    <video src={finalVideoDataUrl} controls autoPlay loop className="w-full max-h-[360px] object-contain" />
                   </div>
                 )}
-                <div className="flex items-center justify-between pt-2">
-                  <button
-                    onClick={() => setStep('cta')}
-                    disabled={generating}
-                    className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 disabled:opacity-40 transition"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                    Back
-                  </button>
-                  <button
-                    onClick={handleGenerate}
-                    disabled={generating || aiQuotaBlocked}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-700 disabled:opacity-60 text-white text-sm font-semibold rounded-lg transition"
-                  >
-                    {generating ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Generating video… (up to 5 min)
-                      </>
-                    ) : (
-                      <>
-                        <Zap className="w-4 h-4" />
-                        Generate UGC Video
-                      </>
-                    )}
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className="space-y-4">
-                <div className="rounded-xl border border-gray-200 overflow-hidden bg-black">
-                  <video
-                    src={finalVideoDataUrl}
-                    controls
-                    autoPlay
-                    loop
-                    className="w-full max-h-[480px] object-contain"
-                  />
-                </div>
-                <div className="flex flex-wrap gap-3">
-                  <button
-                    onClick={downloadVideo}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition"
-                  >
-                    <Download className="w-4 h-4" />
-                    Download MP4
-                  </button>
+
+                {/* Action buttons */}
+                <div className="flex flex-wrap gap-3 pt-1">
+                  {finalVideoDataUrl ? (
+                    <button
+                      onClick={downloadVideo}
+                      className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition"
+                    >
+                      <Download className="w-4 h-4" />
+                      Download MP4
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleMerge}
+                      disabled={generating || !!regenTarget}
+                      className="flex items-center gap-2 px-4 py-2.5 bg-violet-600 hover:bg-violet-700 disabled:opacity-60 text-white text-sm font-medium rounded-lg transition"
+                    >
+                      {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+                      {generating ? 'Merging…' : 'Merge & Download'}
+                    </button>
+                  )}
+                  {finalVideoDataUrl && (
+                    <button
+                      onClick={handleMerge}
+                      disabled={generating || !!regenTarget}
+                      className="flex items-center gap-2 px-4 py-2.5 border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-40 text-sm font-medium rounded-lg transition"
+                    >
+                      {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                      Re-merge
+                    </button>
+                  )}
                   <button
                     onClick={() => {
+                      setStep('brief')
                       setFinalVideoDataUrl('')
-                      setGenerating(false)
-                      setGenError('')
+                      setReactionDataUrl('')
+                      setDemoSegmentDataUrl('')
+                      setCtaDataUrl('')
                     }}
-                    className="flex items-center gap-2 px-4 py-2.5 border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-medium rounded-lg transition"
-                  >
-                    <RefreshCw className="w-4 h-4" />
-                    Regenerate
-                  </button>
-                  <button
-                    onClick={() => { setStep('brief'); setFinalVideoDataUrl('') }}
                     className="flex items-center gap-2 px-4 py-2.5 border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-medium rounded-lg transition"
                   >
                     Start new video
                   </button>
                 </div>
+              </div>
+            )}
+
+            {/* ── Initial generate button ── */}
+            {!reactionDataUrl && (
+              <div className="flex items-center justify-between pt-2">
+                <button
+                  onClick={() => setStep('cta')}
+                  disabled={generating}
+                  className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 disabled:opacity-40 transition"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Back
+                </button>
+                <button
+                  onClick={handleGenerate}
+                  disabled={generating || aiQuotaBlocked}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-700 disabled:opacity-60 text-white text-sm font-semibold rounded-lg transition"
+                >
+                  {generating ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Generating… (up to 5 min)
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="w-4 h-4" />
+                      Generate UGC Video
+                    </>
+                  )}
+                </button>
               </div>
             )}
           </div>
